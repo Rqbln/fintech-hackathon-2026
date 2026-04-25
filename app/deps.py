@@ -35,9 +35,5 @@ def get_llm(request: Request):
     return request.app.state.llm
 
 
-def get_extraction_llm(request: Request):
-    return request.app.state.extraction_llm
-
-
 def get_ingestion_workflow(request: Request):
     return request.app.state.ingestion_workflow

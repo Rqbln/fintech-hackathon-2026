@@ -24,10 +24,9 @@ log = structlog.get_logger()
 class ContractIngestionWorkflow(Workflow):
     """End-to-end contract ingest: PDF → VS index → extraction → graph → scoring."""
 
-    def __init__(self, llm, extraction_llm, embed_model, vector_store, neo4j_driver, llama_parse_api_key=None, **kwargs):
+    def __init__(self, llm, embed_model, vector_store, neo4j_driver, llama_parse_api_key=None, **kwargs):
         super().__init__(**kwargs)
         self._llm = llm
-        self._extraction_llm = extraction_llm  # qwen — 65k context, used only here
         self._embed_model = embed_model
         self._vector_store = vector_store
         self._neo4j = neo4j_driver
@@ -58,7 +57,7 @@ class ContractIngestionWorkflow(Workflow):
 
     @step
     async def extract(self, ev: DocParsedEvent) -> ExtractedEvent:
-        extraction = await run_extraction(self._extraction_llm, ev.contract_id, ev.full_text)
+        extraction = await run_extraction(self._llm, ev.contract_id, ev.full_text)
         return ExtractedEvent(extraction=extraction, node_ids=ev.node_ids)
 
     @step
