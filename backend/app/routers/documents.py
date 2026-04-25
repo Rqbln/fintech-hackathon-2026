@@ -6,8 +6,8 @@ from app.agents.extractor import ExtractorAgent
 
 router = APIRouter()
 _extractor = ExtractorAgent()
-_store: dict[str, dict] = {}       # document_id → VendorDocument
-_batches: dict[str, dict] = {}     # batch_id → batch status
+_store: dict[str, dict] = {}    # document_id → VendorDocument dict
+_batches: dict[str, dict] = {}  # batch_id → batch status
 
 
 @router.post("/upload")
@@ -25,9 +25,9 @@ async def upload_document(
         "document_id": vendor_doc.document_id,
         "filename": file.filename,
         "vendor_name": vendor_name,
-        "status": "extracted",
-        "total_clauses": len(vendor_doc.clauses),
-        "total_sla_entries": len(vendor_doc.sla_entries),
+        "clause_count": len(vendor_doc.clauses),
+        "sla_entry_count": len(vendor_doc.sla_entries),
+        "gcs_uri": vendor_doc.gcs_uri,
     }
 
 
@@ -38,8 +38,8 @@ async def upload_batch(
     vendor_name: str = Form(default="Unknown Vendor"),
 ):
     """
-    Upload a folder of PDFs. Files are processed one by one sequentially.
-    Returns a batch_id to poll for progress via GET /upload/batch/{batch_id}.
+    Upload multiple PDFs. Files processed sequentially in background.
+    Poll GET /upload/batch/{batch_id} for progress.
     """
     pdfs = [f for f in files if f.filename and f.filename.lower().endswith(".pdf")]
     if not pdfs:
@@ -53,20 +53,16 @@ async def upload_batch(
     batch_id = uuid.uuid4().hex[:8]
     _batches[batch_id] = {
         "batch_id": batch_id,
-        "total": len(items),
-        "processed": 0,
         "status": "pending",
+        "total": len(items),
+        "completed": 0,
         "results": [],
+        "errors": [],
     }
 
     background_tasks.add_task(_process_batch, batch_id, items, vendor_name)
 
-    return {
-        "batch_id": batch_id,
-        "total": len(items),
-        "status": "pending",
-        "poll_url": f"/api/documents/upload/batch/{batch_id}",
-    }
+    return {"batch_id": batch_id, "total": len(items), "status": "pending"}
 
 
 @router.get("/upload/batch/{batch_id}")
@@ -79,7 +75,16 @@ async def get_batch_status(batch_id: str):
 
 @router.get("/")
 async def list_documents():
-    return {"documents": list(_store.values()), "total": len(_store)}
+    """List all indexed documents with their metadata."""
+    docs = []
+    for doc in _store.values():
+        docs.append({
+            "document_id": doc.get("document_id"),
+            "vendor_name": doc.get("vendor_name"),
+            "filename": doc.get("filename"),
+            "clause_count": len(doc.get("clauses", [])),
+        })
+    return docs
 
 
 @router.get("/{document_id}")
@@ -90,39 +95,29 @@ async def get_document(document_id: str):
 
 
 # ---------------------------------------------------------------------------
-# Internal batch processor — runs in background, one file at a time
+# Background batch processor — sequential, one file at a time
 # ---------------------------------------------------------------------------
 
-async def _process_batch(
-    batch_id: str,
-    items: list[dict],
-    vendor_name: str,
-) -> None:
+async def _process_batch(batch_id: str, items: list[dict], vendor_name: str) -> None:
     _batches[batch_id]["status"] = "processing"
 
     for item in items:
         filename = item["filename"]
         content = item["content"]
-
-        _batches[batch_id]["results"].append({
-            "filename": filename,
-            "status": "processing",
-            "document_id": None,
-            "total_clauses": None,
-            "error": None,
-        })
-        current = _batches[batch_id]["results"][-1]
-
         try:
             vendor_doc = await _extractor.extract(content, filename, vendor_name)
             _store[vendor_doc.document_id] = vendor_doc.model_dump()
-            current["status"] = "done"
-            current["document_id"] = vendor_doc.document_id
-            current["total_clauses"] = len(vendor_doc.clauses)
+            _batches[batch_id]["results"].append({
+                "document_id": vendor_doc.document_id,
+                "vendor_name": vendor_name,
+                "filename": filename,
+                "clause_count": len(vendor_doc.clauses),
+                "sla_entry_count": len(vendor_doc.sla_entries),
+                "gcs_uri": vendor_doc.gcs_uri,
+            })
         except Exception as e:
-            current["status"] = "error"
-            current["error"] = str(e)
+            _batches[batch_id]["errors"].append({"filename": filename, "error": str(e)})
 
-        _batches[batch_id]["processed"] += 1
+        _batches[batch_id]["completed"] += 1
 
     _batches[batch_id]["status"] = "done"
