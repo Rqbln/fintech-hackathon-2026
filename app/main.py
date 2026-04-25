@@ -39,7 +39,7 @@ async def lifespan(app: FastAPI):
     LlamaSettings.embed_model = embed_model
     app.state.llm = llm
     app.state.embed_model = embed_model
-    log.info("llm_ready", model=settings.z_ai_model)
+    log.info("llm_ready", model=settings.cerebras_model)
 
     # Vertex AI Vector Store + LlamaIndex index
     vector_store = get_or_create_vector_store(settings)
@@ -80,7 +80,7 @@ async def health():
     except Exception as exc:
         checks["neo4j"] = f"error: {exc}"
 
-    checks["llm_key"] = "ok" if settings.z_ai_api_key not in ("", "test-key-placeholder") else "placeholder"
+    checks["llm_key"] = "ok" if settings.cerebras_api_key not in ("", "test-key-placeholder") else "placeholder"
     checks["gemini_key"] = "ok" if settings.gemini_api_key not in ("", "test-key-placeholder") else "placeholder"
     checks["gcp_project"] = "ok" if settings.gcp_project else "missing"
     checks["vector_store"] = "ok" if hasattr(app.state, "vector_store") else "not_initialized"
