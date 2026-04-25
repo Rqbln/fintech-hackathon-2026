@@ -54,6 +54,57 @@ export async function runGapAnalysis(params: {
   return post<ReportArtifact>("/api/gap-analysis", params);
 }
 
+export type GapStreamEvent =
+  | { type: "finding"; data: import("./types").ObligationFinding }
+  | { type: "done"; report: import("./types").ReportArtifact }
+  | { type: "error"; message: string };
+
+export async function streamGapAnalysis(
+  params: {
+    contract_ids: string[];
+    vendor_name: string;
+    contract_text_preview?: string;
+    obligation_ids?: string[];
+  },
+  onEvent: (event: GapStreamEvent) => void,
+  signal?: AbortSignal
+): Promise<void> {
+  const res = await fetch("/api/gap-analysis-stream", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+    signal,
+  });
+
+  if (!res.ok || !res.body) {
+    throw new Error(`gap-analysis-stream failed: ${res.status}`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+
+    // SSE lines are separated by \n\n; each line starts with "data: "
+    const parts = buf.split("\n\n");
+    buf = parts.pop() ?? "";
+
+    for (const part of parts) {
+      for (const line of part.split("\n")) {
+        if (!line.startsWith("data: ")) continue;
+        try {
+          const event = JSON.parse(line.slice(6)) as GapStreamEvent;
+          onEvent(event);
+        } catch { /* skip malformed */ }
+      }
+    }
+  }
+}
+
 export async function getReportMarkdown(sessionId: string): Promise<string> {
   const res = await fetch(`/api/report/${sessionId}/markdown`);
   if (!res.ok) throw new Error(`Report fetch failed: ${res.status}`);

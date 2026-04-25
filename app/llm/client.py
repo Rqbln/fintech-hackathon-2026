@@ -25,6 +25,9 @@ def _make_cerebras(settings: Settings) -> OpenAILike:
         is_chat_model=True,
         is_function_calling_model=True,
         context_window=_CEREBRAS_CTX.get(settings.cerebras_model, 8_192),
+        # Disable the OpenAI SDK's built-in retry (it waits 59s on 429).
+        # Our chat_with_retry wrapper handles retries with proper backoff.
+        max_retries=0,
     )
 
 

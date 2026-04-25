@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Loader2, Globe, AlertTriangle } from "lucide-react";
-import type { NodeAttributes, ReportArtifact } from "@/lib/types";
-import { runGapAnalysis } from "@/lib/api";
+import { X, Loader2, Globe, AlertTriangle, Zap } from "lucide-react";
+import type { NodeAttributes, ObligationFinding, RemediationProposal, ReportArtifact } from "@/lib/types";
+import { streamGapAnalysis } from "@/lib/api";
 import { scoreToColor, scoreToLabel, riskBadgeClass, cn } from "@/lib/utils";
 import FindingCard from "./FindingCard";
 import CitationModal from "./CitationModal";
@@ -18,34 +18,73 @@ interface Props {
 }
 
 export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, onSessionReady }: Props) {
-  const [report, setReport] = useState<ReportArtifact | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [findings, setFindings] = useState<ObligationFinding[]>([]);
+  const [proposals, setProposals] = useState<RemediationProposal[]>([]);
+  const [execSummary, setExecSummary] = useState("");
+  const [streaming, setStreaming] = useState(false);
+  const [done, setDone] = useState(false);
+  const [cached, setCached] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<"findings" | "remediation">("findings");
   const [citation, setCitation] = useState<{ contractId: string; page: number; quote: string } | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const isOpen = !!nodeKey && nodeAttrs?.node_type === "Vendor";
 
   useEffect(() => {
     if (!isOpen || !nodeAttrs) return;
-    setReport(null);
-    setError(null);
-    setTab("findings");
-    setLoading(true);
 
-    runGapAnalysis({
-      contract_ids: contractIds.length ? contractIds : [nodeKey!],
-      vendor_name: nodeAttrs.label,
-      contract_text_preview: "",
-    })
-      .then((r) => { setReport(r); onSessionReady(r.session_id); })
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setLoading(false));
+    // Reset state
+    setFindings([]);
+    setProposals([]);
+    setExecSummary("");
+    setError(null);
+    setDone(false);
+    setCached(false);
+    setTab("findings");
+    setStreaming(true);
+
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+
+    streamGapAnalysis(
+      {
+        contract_ids: contractIds.length ? contractIds : [nodeKey!],
+        vendor_name: nodeAttrs.label,
+        contract_text_preview: "",
+      },
+      (event) => {
+        if (event.type === "finding") {
+          setFindings((prev) => [...prev, event.data]);
+        } else if (event.type === "done") {
+          setProposals(event.report.remediation_proposals);
+          setExecSummary(event.report.executive_summary);
+          onSessionReady(event.report.session_id);
+          setDone(true);
+          setStreaming(false);
+        } else if (event.type === "error") {
+          setError(event.message);
+          setStreaming(false);
+        }
+      },
+      ctrl.signal
+    )
+      .catch((e: Error) => {
+        if (e.name !== "AbortError") setError(e.message);
+        setStreaming(false);
+      });
+
+    return () => ctrl.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodeKey, nodeAttrs, contractIds]);
 
   const score = nodeAttrs?.criticality_score ?? 0;
   const riskColor = scoreToColor(score);
   const riskLabel = scoreToLabel(score);
+
+  const met = findings.filter((f) => f.verdict === "met").length;
+  const partial = findings.filter((f) => f.verdict === "partially_met").length;
+  const unmet = findings.filter((f) => f.verdict === "unmet").length;
 
   return (
     <>
@@ -63,17 +102,18 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  {/* Risk indicator dot */}
                   <div
                     className="w-3 h-3 rounded-full shrink-0"
-                    style={{
-                      background: riskColor,
-                      boxShadow: `0 0 8px ${riskColor}88`,
-                    }}
+                    style={{ background: riskColor, boxShadow: `0 0 8px ${riskColor}88` }}
                   />
                   <h2 className="text-base font-semibold text-slate-100 truncate">
                     {nodeAttrs?.label}
                   </h2>
+                  {cached && (
+                    <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-full">
+                      <Zap size={8} /> cached
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 text-xs text-slate-500">
                   {nodeAttrs?.country && (
@@ -98,9 +138,44 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
               </button>
             </div>
 
-            {/* Tab bar */}
-            {report && (
-              <div className="flex gap-1 mt-4">
+            {/* Progress bar while streaming */}
+            {streaming && (
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-[10px] text-slate-500 mb-1">
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 size={10} className="animate-spin" />
+                    Evaluating obligations…
+                  </span>
+                  <span>{findings.length}/12</span>
+                </div>
+                <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-indigo-500 rounded-full"
+                    animate={{ width: `${(findings.length / 12) * 100}%` }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Summary pills — appear as findings stream in */}
+            {findings.length > 0 && (
+              <div className="flex gap-2 flex-wrap mt-3">
+                <span className="text-xs px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full">
+                  ✅ {met}
+                </span>
+                <span className="text-xs px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full">
+                  ⚠️ {partial}
+                </span>
+                <span className="text-xs px-2 py-0.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-full">
+                  ❌ {unmet}
+                </span>
+              </div>
+            )}
+
+            {/* Tab bar — show once we have findings */}
+            {findings.length > 0 && done && (
+              <div className="flex gap-1 mt-3">
                 {(["findings", "remediation"] as const).map((t) => (
                   <button
                     key={t}
@@ -113,12 +188,9 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
                     )}
                   >
                     {t}
-                    {t === "findings" && report && (
-                      <span className="ml-1.5 opacity-60">{report.findings.length}</span>
-                    )}
-                    {t === "remediation" && report && (
-                      <span className="ml-1.5 opacity-60">{report.remediation_proposals.length}</span>
-                    )}
+                    <span className="ml-1.5 opacity-60">
+                      {t === "findings" ? findings.length : proposals.length}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -127,14 +199,6 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
 
           {/* Body */}
           <div className="flex-1 overflow-y-auto px-5 py-4">
-            {loading && (
-              <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-500">
-                <Loader2 size={24} className="animate-spin text-indigo-400" />
-                <p className="text-sm">Running DORA gap analysis…</p>
-                <p className="text-xs text-slate-600">Evaluating 12 obligations</p>
-              </div>
-            )}
-
             {error && (
               <div className="flex flex-col items-center justify-center h-full gap-3 text-red-400">
                 <AlertTriangle size={22} />
@@ -142,50 +206,55 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
               </div>
             )}
 
-            {report && tab === "findings" && (
-              <div className="space-y-4">
-                {/* Summary pills */}
-                <div className="flex gap-2 flex-wrap">
-                  <span className="text-xs px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full">
-                    ✅ {report.obligations_met} met
-                  </span>
-                  <span className="text-xs px-2 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full">
-                    ⚠️ {report.obligations_partial} partial
-                  </span>
-                  <span className="text-xs px-2 py-1 bg-red-500/10 border border-red-500/20 text-red-400 rounded-full">
-                    ❌ {report.obligations_unmet} unmet
-                  </span>
-                </div>
-
-                {/* Executive summary */}
-                {report.executive_summary && (
-                  <div className="bg-slate-800/60 rounded-lg p-3 border border-slate-700/60">
+            {/* Findings — stream in one by one */}
+            {(tab === "findings" || !done) && findings.length > 0 && (
+              <div className="space-y-3">
+                {execSummary && (
+                  <div className="bg-slate-800/60 rounded-lg p-3 border border-slate-700/60 mb-4">
                     <p className="text-[11px] text-slate-400 uppercase tracking-wider mb-1.5 font-semibold">AI Summary</p>
-                    <p className="text-xs text-slate-300 leading-relaxed">{report.executive_summary}</p>
+                    <p className="text-xs text-slate-300 leading-relaxed">{execSummary}</p>
                   </div>
                 )}
-
-                {/* Findings */}
-                <div className="space-y-3">
-                  {report.findings.map((f) => (
+                {findings.map((f) => (
+                  <motion.div
+                    key={f.obligation_id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
                     <FindingCard
-                      key={f.obligation_id}
                       finding={f}
                       onCitationClick={(cId, pg, quote) => setCitation({ contractId: cId, page: pg, quote })}
                     />
-                  ))}
-                </div>
+                  </motion.div>
+                ))}
+                {streaming && (
+                  <div className="flex items-center gap-2 text-slate-600 text-xs py-2">
+                    <Loader2 size={11} className="animate-spin" />
+                    <span>More findings arriving…</span>
+                  </div>
+                )}
               </div>
             )}
 
-            {report && tab === "remediation" && (
+            {/* Empty state while first finding loads */}
+            {findings.length === 0 && streaming && (
+              <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-500">
+                <Loader2 size={24} className="animate-spin text-indigo-400" />
+                <p className="text-sm">Running DORA gap analysis…</p>
+                <p className="text-xs text-slate-600">Evaluating 12 obligations in parallel</p>
+              </div>
+            )}
+
+            {/* Remediation tab */}
+            {tab === "remediation" && done && (
               <div className="space-y-4">
-                {report.remediation_proposals.length === 0 ? (
+                {proposals.length === 0 ? (
                   <div className="text-center text-slate-500 text-sm pt-8">
                     No remediation needed — all obligations met.
                   </div>
                 ) : (
-                  report.remediation_proposals.map((p) => (
+                  proposals.map((p) => (
                     <div
                       key={p.obligation_id}
                       className="border border-slate-700/60 rounded-xl p-4 bg-slate-900/40 space-y-3"
@@ -197,12 +266,9 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-400 leading-relaxed">{p.detail}</p>
-
                       {p.sovereign_alternatives.length > 0 && (
                         <div>
-                          <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-2 font-semibold">
-                            EU-Sovereign alternatives
-                          </p>
+                          <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-2 font-semibold">EU-Sovereign alternatives</p>
                           <div className="space-y-1.5">
                             {p.sovereign_alternatives.slice(0, 3).map((alt) => (
                               <div
@@ -212,12 +278,8 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
                                 <div>
                                   <span className="text-xs font-medium text-slate-200">{alt.name}</span>
                                   <span className="text-[10px] text-slate-500 ml-1.5">{alt.hq_country}</span>
-                                  {alt.eu_sovereign && (
-                                    <span className="ml-1.5 text-[10px] text-emerald-400 font-medium">EU ✓</span>
-                                  )}
-                                  {alt.certification && (
-                                    <span className="ml-1 text-[10px] text-indigo-400">{alt.certification}</span>
-                                  )}
+                                  {alt.eu_sovereign && <span className="ml-1.5 text-[10px] text-emerald-400 font-medium">EU ✓</span>}
+                                  {alt.certification && <span className="ml-1 text-[10px] text-indigo-400">{alt.certification}</span>}
                                 </div>
                                 <span className="text-[10px] text-slate-500">{alt.cost_delta}</span>
                               </div>
@@ -235,8 +297,6 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
       )}
     </AnimatePresence>
 
-    {/* CitationModal lives outside AnimatePresence — it owns its own AnimatePresence
-        internally, and nesting them causes Framer Motion duplicate-key warnings. */}
     <CitationModal
       contractId={citation?.contractId ?? null}
       page={citation?.page ?? 1}

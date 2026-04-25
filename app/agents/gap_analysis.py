@@ -1,11 +1,8 @@
-"""GapAnalysisAgent — evaluates each DORA Art.30 obligation against a contract.
+"""GapAnalysisAgent — evaluates DORA Art.30 obligations against a contract.
 
-For each obligation the agent:
-  1. Queries the CitationQueryEngine with the obligation text + contract_id filter.
-  2. Asks the LLM to produce a structured verdict (met / partially_met / unmet).
-  3. Returns a list of ObligationFinding with source citations.
-
-JSON-mode prompting — same pattern as ExtractionAgent.
+Each obligation is an independent LLM call. A semaphore caps concurrency so
+we don't burst-hit Cerebras's rate limit. Results are yielded as they complete
+so the caller can stream them to the frontend immediately.
 """
 
 import asyncio
@@ -24,6 +21,7 @@ from app.schemas import EvidenceSpan, ObligationFinding, Verdict
 log = structlog.get_logger()
 
 _OBLIGATIONS_PATH = Path(__file__).parent.parent / "data" / "dora_obligations.yaml"
+_CONCURRENCY = 4  # max simultaneous LLM calls — stays under Cerebras 100 RPM burst
 
 _SYSTEM = """\
 You are a DORA (EU 2022/2554) compliance analyst. Given a DORA obligation and excerpts
@@ -55,21 +53,13 @@ def _parse_verdict_json(raw: str) -> dict:
 
 async def _evaluate_one(
     llm: LLM,
-    citation_engine: BaseQueryEngine,
     obligation: dict,
     contract_id: str,
     contract_text_preview: str,
 ) -> ObligationFinding:
+    """Single obligation evaluation — one LLM call, no RAG (contract text is primary)."""
     ob_id = obligation["id"]
 
-    # Step 1: retrieve relevant contract chunks via RAG (DORA regulation context only)
-    # Use aquery — sync query() calls GoogleGenAI._chat() → asyncio.run() which
-    # raises RuntimeError when called from FastAPI's running event loop.
-    query = f"DORA Article {obligation['article']} paragraph {obligation['paragraph']}: {obligation['text']}"
-    rag_response = await citation_engine.aquery(query)
-    rag_context = str(rag_response)[:800]
-
-    # Step 2: LLM verdict — contract text is the primary evidence source
     user_msg = (
         f"DORA Obligation (Art.{obligation['article']} §{obligation['paragraph']}):\n"
         f"{obligation['text']}\n\n"
@@ -80,6 +70,7 @@ async def _evaluate_one(
         ChatMessage(role="system", content=_SYSTEM),
         ChatMessage(role="user", content=user_msg),
     ]
+
     resp = await chat_with_retry(llm, messages)
     raw = resp.message.content.strip()
 
@@ -89,7 +80,7 @@ async def _evaluate_one(
         log.warning("gap_analysis_json_failed", obligation_id=ob_id, error=str(exc))
         data = {
             "verdict": "unknown",
-            "rationale": f"LLM parse error: {exc}",
+            "rationale": f"Parse error: {exc}",
             "gap_description": "",
             "risk_level": "medium",
             "evidence_quotes": [],
@@ -100,9 +91,8 @@ async def _evaluate_one(
         for q in data.get("evidence_quotes", [])
     ]
 
-    verdict_str = data.get("verdict", "unknown")
     try:
-        verdict = Verdict(verdict_str)
+        verdict = Verdict(data.get("verdict", "unknown"))
     except ValueError:
         verdict = Verdict.UNKNOWN
 
@@ -121,6 +111,42 @@ async def _evaluate_one(
     return finding
 
 
+async def stream_gap_analysis(
+    llm: LLM,
+    contract_id: str,
+    contract_text_preview: str,
+    obligation_ids: list[str] | None = None,
+):
+    """Async generator that yields ObligationFinding as each evaluation completes.
+
+    Uses a semaphore to cap concurrency at _CONCURRENCY simultaneous calls.
+    Drop the citation_engine dependency — contract text is the primary source,
+    which is faster and avoids nested asyncio issues with Vertex AI VS.
+    """
+    obligations = _load_obligations()
+    if obligation_ids:
+        obligations = [o for o in obligations if o["id"] in obligation_ids]
+
+    log.info("gap_analysis_start", obligations=len(obligations), contract_id=contract_id)
+    sem = asyncio.Semaphore(_CONCURRENCY)
+
+    async def eval_with_sem(ob: dict) -> ObligationFinding:
+        async with sem:
+            return await _evaluate_one(llm, ob, contract_id, contract_text_preview)
+
+    tasks = [asyncio.create_task(eval_with_sem(ob)) for ob in obligations]
+
+    for coro in asyncio.as_completed(tasks):
+        try:
+            finding = await coro
+            yield finding
+        except Exception as exc:
+            log.warning("gap_finding_failed", error=str(exc)[:120])
+
+    log.info("gap_analysis_complete", contract_id=contract_id)
+
+
+# Kept for backward compat (scripts/test_pipeline.py etc.)
 async def run_gap_analysis(
     llm: LLM,
     citation_engine: BaseQueryEngine,
@@ -128,44 +154,7 @@ async def run_gap_analysis(
     contract_text_preview: str,
     obligation_ids: list[str] | None = None,
 ) -> list[ObligationFinding]:
-    """Evaluate DORA Art.30 obligations in parallel — one coroutine per obligation.
-
-    asyncio.gather() fires all LLM calls concurrently, reducing wall-clock time
-    from N×T to ~T (where T is the latency of a single LLM round-trip).
-    Individual failures are caught and recorded as Verdict.UNKNOWN so the
-    rest of the report is unaffected.
-    """
-    obligations = _load_obligations()
-    if obligation_ids:
-        obligations = [o for o in obligations if o["id"] in obligation_ids]
-
-    log.info("gap_analysis_start", obligations=len(obligations), contract_id=contract_id)
-
-    results = await asyncio.gather(
-        *[
-            _evaluate_one(llm, citation_engine, ob, contract_id, contract_text_preview)
-            for ob in obligations
-        ],
-        return_exceptions=True,
-    )
-
     findings: list[ObligationFinding] = []
-    for ob, result in zip(obligations, results):
-        if isinstance(result, BaseException):
-            log.warning("gap_finding_failed", obligation_id=ob["id"], error=str(result)[:120])
-            findings.append(
-                ObligationFinding(
-                    obligation_id=ob["id"],
-                    article=ob["article"],
-                    paragraph=ob["paragraph"],
-                    description=ob["text"],
-                    verdict=Verdict.UNKNOWN,
-                    rationale=f"Evaluation error: {str(result)[:100]}",
-                    risk_level="medium",
-                )
-            )
-        else:
-            findings.append(result)
-
-    log.info("gap_analysis_complete", findings=len(findings))
+    async for f in stream_gap_analysis(llm, contract_id, contract_text_preview, obligation_ids):
+        findings.append(f)
     return findings
