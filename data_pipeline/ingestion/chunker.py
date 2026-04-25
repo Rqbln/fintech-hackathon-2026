@@ -1,7 +1,13 @@
-"""Document chunking strategies for legal/compliance documents."""
+"""CLI wrapper — delegates to backend/app/utils/chunker.py."""
+import sys
+from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "backend"))
 
-def chunk_by_clause(text: str, max_chunk_size: int = 1000) -> list[dict]:
-    """Split document text into semantic chunks by clause or article number."""
-    # TODO: Implement clause-aware splitting with LangChain
-    pass
+from app.utils.chunker import chunk_by_clause, _classify  # noqa: F401
+
+if __name__ == "__main__":
+    import json
+
+    sample = [{"page": 1, "text": "Article 1. Test clause about RTO of 4 hours."}]
+    print(json.dumps(chunk_by_clause(sample), ensure_ascii=False, indent=2))
