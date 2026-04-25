@@ -42,28 +42,22 @@ def parse_pdf(file_bytes: bytes, llama_parse_api_key: str | None) -> list[dict[s
     return _parse_pdf_pymupdf(file_bytes)
 
 
-_PDF_STORE = None
-
-
-def _get_pdf_store() -> "Path":
-    """Lazy init of contract PDF storage directory."""
-    from pathlib import Path
-    global _PDF_STORE
-    if _PDF_STORE is None:
-        _PDF_STORE = Path("./traces/contracts")
-        _PDF_STORE.mkdir(parents=True, exist_ok=True)
-    return _PDF_STORE
+# Absolute path — independent of CWD so it works regardless of how uvicorn is started.
+_PDF_STORE_PATH = (
+    __import__("pathlib").Path(__file__).parent.parent.parent / "traces" / "contracts"
+)
 
 
 def save_contract_pdf(contract_id: str, file_bytes: bytes) -> None:
-    """Persist raw PDF bytes to local storage for later citation viewing."""
-    store = _get_pdf_store()
-    (store / f"{contract_id}.pdf").write_bytes(file_bytes)
+    """Persist raw PDF bytes to disk for the citation viewer endpoint."""
+    _PDF_STORE_PATH.mkdir(parents=True, exist_ok=True)
+    dest = _PDF_STORE_PATH / f"{contract_id}.pdf"
+    dest.write_bytes(file_bytes)
+    log.info("pdf_saved", contract_id=contract_id, path=str(dest), size=len(file_bytes))
 
 
-def get_contract_pdf_path(contract_id: str) -> "Path | None":
-    from pathlib import Path
-    path = Path("./traces/contracts") / f"{contract_id}.pdf"
+def get_contract_pdf_path(contract_id: str) -> "__import__('pathlib').Path | None":
+    path = _PDF_STORE_PATH / f"{contract_id}.pdf"
     return path if path.exists() else None
 
 
