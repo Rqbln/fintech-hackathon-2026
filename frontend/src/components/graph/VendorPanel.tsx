@@ -48,6 +48,7 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
   const riskLabel = scoreToLabel(score);
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -232,14 +233,16 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
           </div>
         </motion.div>
       )}
-
-      {/* PDF citation modal — rendered outside the panel so it's truly full-screen */}
-      <CitationModal
-        contractId={citation?.contractId ?? null}
-        page={citation?.page ?? 1}
-        quote={citation?.quote ?? ""}
-        onClose={() => setCitation(null)}
-      />
     </AnimatePresence>
+
+    {/* CitationModal lives outside AnimatePresence — it owns its own AnimatePresence
+        internally, and nesting them causes Framer Motion duplicate-key warnings. */}
+    <CitationModal
+      contractId={citation?.contractId ?? null}
+      page={citation?.page ?? 1}
+      quote={citation?.quote ?? ""}
+      onClose={() => setCitation(null)}
+    />
+    </>
   );
 }
