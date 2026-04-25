@@ -56,7 +56,17 @@ async def ingest_contract(
     file_bytes = await file.read()
     doc_id = contract_id or hashlib.md5(file_bytes).hexdigest()[:12]
 
-    result = await workflow.run(file_bytes=file_bytes, contract_id=doc_id)
+    try:
+        result = await workflow.run(file_bytes=file_bytes, contract_id=doc_id)
+    except Exception as exc:
+        msg = str(exc)
+        # Surface rate-limit errors as 503 so the client can retry
+        is_rate_limit = "429" in msg or "queue_exceeded" in msg or "too_many_requests" in msg.lower()
+        status = 503 if is_rate_limit else 500
+        raise HTTPException(
+            status_code=status,
+            detail={"error": "pipeline_failed", "message": msg[:400]},
+        ) from exc
 
     return {
         "status": "ingested",

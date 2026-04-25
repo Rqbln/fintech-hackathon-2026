@@ -15,6 +15,7 @@ import yaml
 from llama_index.core.llms import ChatMessage, LLM
 from rapidfuzz import fuzz
 
+from app.llm.retry import chat_with_retry
 from app.schemas import AlternativeVendor, ObligationFinding, RemediationProposal, Verdict
 
 log = structlog.get_logger()
@@ -101,7 +102,7 @@ async def _remediate_one(
         ChatMessage(role="system", content=_SYSTEM),
         ChatMessage(role="user", content=user_msg),
     ]
-    resp = await llm.achat(messages)
+    resp = await chat_with_retry(llm, messages)
     raw = resp.message.content.strip()
 
     try:

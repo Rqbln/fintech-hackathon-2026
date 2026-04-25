@@ -6,6 +6,7 @@ Also asks the LLM to write a short executive summary.
 import structlog
 from llama_index.core.llms import ChatMessage, LLM
 
+from app.llm.retry import chat_with_retry
 from app.schemas import ObligationFinding, RemediationProposal, ReportArtifact, Verdict
 
 log = structlog.get_logger()
@@ -50,7 +51,7 @@ async def assemble_report(
 
     # Executive summary via LLM
     prompt = _EXEC_SUMMARY_PROMPT.format(findings_text=_findings_text(findings))
-    resp = await llm.achat([ChatMessage(role="user", content=prompt)])
+    resp = await chat_with_retry(llm, [ChatMessage(role="user", content=prompt)])
     exec_summary = resp.message.content.strip()
 
     report = ReportArtifact(

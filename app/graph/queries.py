@@ -25,11 +25,14 @@ def _vendor_size(score: float) -> float:
 
 async def get_graph(driver: AsyncDriver, root_vendor: str | None = None, depth: int = 2) -> GraphResponse:
     """Return the full graph (or subgraph rooted at a vendor) as Sigma-ready JSON."""
+    # Neo4j does not allow parameters in variable-length path bounds [*0..$depth].
+    # depth is an integer from the API layer — safe to interpolate directly.
+    d = max(1, min(int(depth), 10))
     if root_vendor:
         node_rows = await run_read(
             driver,
-            """
-            MATCH path = (root:Vendor {name: $name})-[*0..$depth]-(n)
+            f"""
+            MATCH path = (root:Vendor {{name: $name}})-[*0..{d}]-(nb)
             UNWIND nodes(path) AS n
             RETURN DISTINCT
                 labels(n)[0] AS label_type,
@@ -40,23 +43,19 @@ async def get_graph(driver: AsyncDriver, root_vendor: str | None = None, depth: 
                 coalesce(n.is_critical_provider, false) AS is_critical_provider
             """,
             name=root_vendor,
-            depth=depth,
         )
         edge_rows = await run_read(
             driver,
-            """
-            MATCH path = (root:Vendor {name: $name})-[*0..$depth]-(n)
+            f"""
+            MATCH path = (root:Vendor {{name: $name}})-[*0..{d}]-(nb)
             UNWIND relationships(path) AS r
             RETURN DISTINCT
                 id(r) AS eid,
-                id(startNode(r)) AS src_eid,
-                id(endNode(r)) AS tgt_eid,
                 startNode(r).id AS source,
                 endNode(r).id AS target,
                 type(r) AS rel_type
             """,
             name=root_vendor,
-            depth=depth,
         )
     else:
         node_rows = await run_read(

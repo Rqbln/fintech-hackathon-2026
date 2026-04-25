@@ -12,6 +12,7 @@ import structlog
 
 from llama_index.core.llms import LLM
 
+from app.llm.retry import chat_with_retry
 from app.schemas import ContractExtraction, EvidenceSpan, ServiceClause
 
 log = structlog.get_logger()
@@ -96,7 +97,7 @@ async def run_extraction(llm: LLM, contract_id: str, full_text: str) -> Contract
         ChatMessage(role="user", content=user_msg),
     ]
 
-    response = await llm.achat(messages)
+    response = await chat_with_retry(llm, messages)
     raw = response.message.content.strip()
     log.debug("extraction_raw_response", contract_id=contract_id, chars=len(raw))
 
@@ -104,7 +105,6 @@ async def run_extraction(llm: LLM, contract_id: str, full_text: str) -> Contract
         data = _parse_json_from_response(raw)
     except (json.JSONDecodeError, ValueError) as exc:
         log.warning("extraction_json_parse_failed", contract_id=contract_id, error=str(exc))
-        # Retry with explicit correction prompt
         correction = [
             *messages,
             ChatMessage(role="assistant", content=raw),
@@ -113,7 +113,7 @@ async def run_extraction(llm: LLM, contract_id: str, full_text: str) -> Contract
                 content="Your response was not valid JSON. Return ONLY the JSON object, no markdown.",
             ),
         ]
-        response2 = await llm.achat(correction)
+        response2 = await chat_with_retry(llm, correction)
         data = _parse_json_from_response(response2.message.content.strip())
 
     extraction = _build_extraction(contract_id, data)
