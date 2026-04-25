@@ -2,7 +2,7 @@ name: Deploy Backend
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev-baptiste]
     paths:
       - backend/**
       - reference_data/**
@@ -11,8 +11,8 @@ env:
   GCP_PROJECT: regagent-dora-2026
   GCP_REGION: europe-west9
   AR_REPO: regagent-repo
-  SERVICE_NAME: regagent-backend
-  IMAGE: europe-west9-docker.pkg.dev/regagent-dora-2026/regagent-repo/backend
+  SERVICE_NAME: regagent-backend-dev
+  IMAGE: europe-west9-docker.pkg.dev/regagent-dora-2026/regagent-repo/backend-dev
 
 permissions:
   contents: read
