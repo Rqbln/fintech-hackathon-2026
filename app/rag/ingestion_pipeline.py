@@ -42,6 +42,31 @@ def parse_pdf(file_bytes: bytes, llama_parse_api_key: str | None) -> list[dict[s
     return _parse_pdf_pymupdf(file_bytes)
 
 
+_PDF_STORE = None
+
+
+def _get_pdf_store() -> "Path":
+    """Lazy init of contract PDF storage directory."""
+    from pathlib import Path
+    global _PDF_STORE
+    if _PDF_STORE is None:
+        _PDF_STORE = Path("./traces/contracts")
+        _PDF_STORE.mkdir(parents=True, exist_ok=True)
+    return _PDF_STORE
+
+
+def save_contract_pdf(contract_id: str, file_bytes: bytes) -> None:
+    """Persist raw PDF bytes to local storage for later citation viewing."""
+    store = _get_pdf_store()
+    (store / f"{contract_id}.pdf").write_bytes(file_bytes)
+
+
+def get_contract_pdf_path(contract_id: str) -> "Path | None":
+    from pathlib import Path
+    path = Path("./traces/contracts") / f"{contract_id}.pdf"
+    return path if path.exists() else None
+
+
 async def ingest_pdf(
     file_bytes: bytes,
     document_id: str,
@@ -52,6 +77,10 @@ async def ingest_pdf(
     llama_parse_api_key: str | None = None,
 ) -> list[str]:
     """Parse, chunk, embed, and upsert one PDF. Returns list of upserted node IDs."""
+    # Persist PDF for citation viewer
+    if doc_type == "contract" and contract_id:
+        save_contract_pdf(contract_id, file_bytes)
+
     pages = parse_pdf(file_bytes, llama_parse_api_key)
     log.info("pdf_parsed", document_id=document_id, pages=len(pages))
 

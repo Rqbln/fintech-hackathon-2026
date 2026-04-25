@@ -4,10 +4,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    # LLM — Cerebras inference (OpenAI-compatible)
-    cerebras_api_key: str
+    # LLM provider: "cerebras" | "gemini"
+    llm_provider: str = "cerebras"
+
+    # Cerebras inference (OpenAI-compatible)
+    cerebras_api_key: str = ""
     cerebras_base_url: str = "https://api.cerebras.ai/v1"
     cerebras_model: str = "llama3.1-8b"
+
+    # Gemini LLM (Google AI Studio — same key as embeddings)
+    gemini_llm_model: str = "gemini-3-flash-preview"
 
     # Embeddings
     gemini_api_key: str

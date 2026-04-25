@@ -97,6 +97,7 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
 
     // Sigma renderer
     const renderer = new Sigma(graph, containerRef.current, {
+      allowInvalidContainer: true,   // suppress "no width" on hidden/transitioning mount
       renderEdgeLabels: false,
       labelFont: "Inter, system-ui, sans-serif",
       labelSize: 12,
@@ -118,6 +119,8 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
 
     // Pulse animation for high-risk vendor nodes
     const animate = () => {
+      // Guard: stop if renderer was killed or container is gone
+      if (!sigmaRef.current || !containerRef.current?.isConnected) return;
       const t = Date.now() / 700;
       for (const node of graph.nodes()) {
         const attrs = graph.getNodeAttributes(node);

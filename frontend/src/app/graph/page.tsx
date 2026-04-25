@@ -262,6 +262,7 @@ export default function GraphPage() {
             nodeAttrs={selectedAttrs}
             contractIds={vendorContracts}
             onClose={handleClosePanel}
+            onSessionReady={setLastSessionId}
           />
         )}
       </div>

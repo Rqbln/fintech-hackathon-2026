@@ -1,11 +1,13 @@
+import { ExternalLink } from "lucide-react";
 import type { ObligationFinding } from "@/lib/types";
 import { verdictIcon, verdictColor, riskBadgeClass, cn } from "@/lib/utils";
 
 interface Props {
   finding: ObligationFinding;
+  onCitationClick?: (contractId: string, page: number, quote: string) => void;
 }
 
-export default function FindingCard({ finding }: Props) {
+export default function FindingCard({ finding, onCitationClick }: Props) {
   const borderColor =
     finding.verdict === "met"
       ? "border-emerald-500/40"
@@ -24,12 +26,7 @@ export default function FindingCard({ finding }: Props) {
           <span className="text-xs font-semibold text-slate-300">
             Art.{finding.article} §{finding.paragraph}
           </span>
-          <span
-            className={cn(
-              "text-[10px] px-1.5 py-0.5 rounded border font-medium",
-              riskBadgeClass(finding.risk_level)
-            )}
-          >
+          <span className={cn("text-[10px] px-1.5 py-0.5 rounded border font-medium", riskBadgeClass(finding.risk_level))}>
             {finding.risk_level}
           </span>
         </div>
@@ -46,19 +43,27 @@ export default function FindingCard({ finding }: Props) {
         <p className="text-[11px] text-red-400/80 italic">{finding.gap_description}</p>
       )}
 
-      {/* Evidence quotes */}
+      {/* Evidence spans with "See in PDF" button */}
       {finding.evidence_spans.length > 0 && (
-        <div className="space-y-1 pt-0.5">
+        <div className="space-y-1.5 pt-0.5">
           {finding.evidence_spans.slice(0, 2).map((span, i) => (
-            <blockquote
-              key={i}
-              className="border-l border-slate-600 pl-2 text-[11px] text-slate-500 italic"
-            >
-              "{span.text}"
-              {span.page > 0 && (
-                <span className="not-italic text-slate-600 ml-1">p.{span.page}</span>
+            <div key={i} className="group">
+              <blockquote className="border-l border-slate-600 pl-2 text-[11px] text-slate-500 italic">
+                "{span.text}"
+                {span.page > 0 && (
+                  <span className="not-italic text-slate-600 ml-1">p.{span.page}</span>
+                )}
+              </blockquote>
+              {onCitationClick && span.document_id && (
+                <button
+                  onClick={() => onCitationClick(span.document_id, span.page, span.text)}
+                  className="flex items-center gap-1 mt-0.5 ml-2 text-[10px] text-indigo-400 hover:text-indigo-300 transition-colors opacity-0 group-hover:opacity-100"
+                >
+                  <ExternalLink size={9} />
+                  See in PDF
+                </button>
               )}
-            </blockquote>
+            </div>
           ))}
         </div>
       )}

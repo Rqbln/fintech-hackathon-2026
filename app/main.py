@@ -18,7 +18,7 @@ from .llm.embeddings import make_embed_model
 from .rag.citation_query import make_citation_engine
 from .rag.store import get_or_create_vector_store
 from .tracing.logger import configure_logging
-from .api import analysis, graph, ingest, remediation, report, sessions
+from .api import analysis, documents, graph, ingest, remediation, report, sessions
 
 log = structlog.get_logger()
 
@@ -78,6 +78,7 @@ app = FastAPI(
 )
 
 app.include_router(ingest.router, prefix="/api", tags=["ingest"])
+app.include_router(documents.router, prefix="/api", tags=["documents"])
 app.include_router(graph.router, prefix="/api", tags=["graph"])
 app.include_router(analysis.router, prefix="/api", tags=["analysis"])
 app.include_router(remediation.router, prefix="/api", tags=["remediation"])

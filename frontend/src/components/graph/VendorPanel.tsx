@@ -7,19 +7,22 @@ import type { NodeAttributes, ReportArtifact } from "@/lib/types";
 import { runGapAnalysis } from "@/lib/api";
 import { scoreToColor, scoreToLabel, riskBadgeClass, cn } from "@/lib/utils";
 import FindingCard from "./FindingCard";
+import CitationModal from "./CitationModal";
 
 interface Props {
   nodeKey: string | null;
   nodeAttrs: NodeAttributes | null;
   contractIds: string[];
   onClose: () => void;
+  onSessionReady: (sessionId: string) => void;
 }
 
-export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose }: Props) {
+export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, onSessionReady }: Props) {
   const [report, setReport] = useState<ReportArtifact | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<"findings" | "remediation">("findings");
+  const [citation, setCitation] = useState<{ contractId: string; page: number; quote: string } | null>(null);
 
   const isOpen = !!nodeKey && nodeAttrs?.node_type === "Vendor";
 
@@ -35,7 +38,7 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose }
       vendor_name: nodeAttrs.label,
       contract_text_preview: "",
     })
-      .then(setReport)
+      .then((r) => { setReport(r); onSessionReady(r.session_id); })
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   }, [nodeKey, nodeAttrs, contractIds]);
@@ -164,7 +167,11 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose }
                 {/* Findings */}
                 <div className="space-y-3">
                   {report.findings.map((f) => (
-                    <FindingCard key={f.obligation_id} finding={f} />
+                    <FindingCard
+                      key={f.obligation_id}
+                      finding={f}
+                      onCitationClick={(cId, pg, quote) => setCitation({ contractId: cId, page: pg, quote })}
+                    />
                   ))}
                 </div>
               </div>
@@ -225,6 +232,14 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose }
           </div>
         </motion.div>
       )}
+
+      {/* PDF citation modal — rendered outside the panel so it's truly full-screen */}
+      <CitationModal
+        contractId={citation?.contractId ?? null}
+        page={citation?.page ?? 1}
+        quote={citation?.quote ?? ""}
+        onClose={() => setCitation(null)}
+      />
     </AnimatePresence>
   );
 }
