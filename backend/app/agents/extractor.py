@@ -85,7 +85,7 @@ class ExtractorAgent:
                  if "value" in h or "valeur" in h or "target" in h),
                 None,
             )
-            if metric_col is not None and value_col is not None:
+            if metric_col is not None and value_col is not None and metric_col != value_col:
                 for row in table["rows"]:
                     if len(row) > max(metric_col, value_col):
                         entries.append(SLAEntry(
