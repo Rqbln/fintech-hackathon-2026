@@ -1,0 +1,242 @@
+# DORA Article 30 contractual obligations — demo subset
+# Source: Regulation (EU) 2022/2554, Article 30
+# Each entry is evaluated per contract by GapAnalysisAgent.
+
+obligations:
+  - id: DORA-Art30-2-a
+    article: "30"
+    paragraph: "2(a)"
+    pillar: "ICT Third-Party Risk"
+    text: >
+      A clear and complete description of all functions and ICT services to be provided
+      by the ICT third-party service provider, indicating whether subcontracting of an ICT
+      service or a function is permitted.
+    keywords:
+      - "description of services"
+      - "functions provided"
+      - "scope of services"
+      - "subcontracting"
+    pass_criteria: >
+      Contract explicitly lists all services/functions provided. Scope is bounded.
+      Subcontracting permission (or prohibition) is stated.
+
+  - id: DORA-Art30-2-b
+    article: "30"
+    paragraph: "2(b)"
+    pillar: "ICT Third-Party Risk"
+    text: >
+      The locations, namely the regions or countries, where the contracted or subcontracted
+      functions and ICT services are to be provided and where data is to be processed,
+      including the storage location, and the requirement for the ICT third-party service
+      provider to notify the financial entity if it envisages changing such locations.
+    keywords:
+      - "data location"
+      - "data center"
+      - "region"
+      - "country"
+      - "storage location"
+      - "data residency"
+    pass_criteria: >
+      Contract names specific countries or regions where data is processed and stored.
+      Includes notification obligation if locations change.
+
+  - id: DORA-Art30-2-c
+    article: "30"
+    paragraph: "2(c)"
+    pillar: "ICT Third-Party Risk"
+    text: >
+      Provisions on availability, authenticity, integrity and confidentiality in relation
+      to the protection of data, including personal data.
+    keywords:
+      - "data protection"
+      - "confidentiality"
+      - "integrity"
+      - "availability"
+      - "GDPR"
+      - "encryption"
+      - "data security"
+    pass_criteria: >
+      Contract includes explicit provisions on data confidentiality, integrity, and
+      availability. References applicable data protection law (e.g. GDPR) or
+      equivalent security controls.
+
+  - id: DORA-Art30-2-d
+    article: "30"
+    paragraph: "2(d)"
+    pillar: "ICT Third-Party Risk"
+    text: >
+      Provisions on ensuring access, recovery and return in an easily accessible format
+      of personal and non-personal data processed by the financial entity in the event of
+      the insolvency, resolution or discontinuation of business operations of the ICT
+      third-party service provider, or in the event of termination of the contractual
+      arrangements.
+    keywords:
+      - "data portability"
+      - "data return"
+      - "data recovery"
+      - "termination"
+      - "insolvency"
+      - "data export"
+    pass_criteria: >
+      Contract guarantees data return/portability on termination or insolvency.
+      Specifies format and timeframe for data handover.
+
+  - id: DORA-Art30-2-e
+    article: "30"
+    paragraph: "2(e)"
+    pillar: "ICT Third-Party Risk"
+    text: >
+      Service level descriptions, including updates and revisions thereof, with precise
+      quantitative and qualitative performance targets within the agreed service levels,
+      so as to allow effective monitoring by the financial entity and enable appropriate
+      corrective actions without undue delay when agreed service levels are not met.
+    keywords:
+      - "SLA"
+      - "service level"
+      - "uptime"
+      - "availability"
+      - "RTO"
+      - "RPO"
+      - "performance target"
+      - "KPI"
+    pass_criteria: >
+      Contract contains quantitative SLA metrics (e.g. uptime %, RTO, RPO).
+      Includes process for remediation when SLAs are breached.
+
+  - id: DORA-Art30-3-a
+    article: "30"
+    paragraph: "3(a)"
+    pillar: "ICT Third-Party Risk"
+    text: >
+      Cooperation of the ICT third-party service provider with the competent authorities
+      and the resolution authorities of the financial entity, including persons appointed
+      by them.
+    keywords:
+      - "regulator"
+      - "competent authority"
+      - "cooperation"
+      - "supervisory"
+      - "resolution authority"
+    pass_criteria: >
+      Contract includes explicit obligation for the provider to cooperate with the
+      financial entity's regulators and resolution authorities.
+
+  - id: DORA-Art30-3-b
+    article: "30"
+    paragraph: "3(b)"
+    pillar: "ICT Third-Party Risk"
+    text: >
+      Termination rights and related minimum notice periods for the termination of the
+      contractual arrangements, in accordance with the expectations of competent
+      authorities and resolution authorities.
+    keywords:
+      - "termination"
+      - "notice period"
+      - "exit"
+      - "contract termination"
+      - "termination rights"
+      - "right to terminate"
+    pass_criteria: >
+      Contract grants explicit termination rights to the financial entity.
+      Specifies minimum notice period. Includes right to terminate for breach
+      without cure period exceeding regulatory expectations.
+
+  - id: DORA-Art30-3-c
+    article: "30"
+    paragraph: "3(c)"
+    pillar: "ICT Third-Party Risk"
+    text: >
+      Conditions for and assistance by the ICT third-party service provider to the
+      financial entity in the event of an ICT incident related to the service provided,
+      at no additional cost or at a cost that is determined ex-ante.
+    keywords:
+      - "incident response"
+      - "incident assistance"
+      - "incident notification"
+      - "security incident"
+      - "breach notification"
+    pass_criteria: >
+      Contract obligates the provider to assist the financial entity during ICT
+      incidents. Cost of incident assistance is pre-agreed (not ad-hoc).
+
+  - id: DORA-Art30-3-d
+    article: "30"
+    paragraph: "3(d)"
+    pillar: "ICT Third-Party Risk"
+    text: >
+      An obligation of the ICT third-party service provider to cooperate fully with the
+      competent authorities and the resolution authorities of the financial entity,
+      including persons appointed by them.
+    keywords:
+      - "audit right"
+      - "right to audit"
+      - "inspection"
+      - "access"
+      - "monitoring"
+      - "oversight"
+    pass_criteria: >
+      Contract grants the financial entity (or its appointed auditors) the right
+      to audit and inspect the provider's systems and processes.
+
+  - id: DORA-Art30-3-e
+    article: "30"
+    paragraph: "3(e)"
+    pillar: "ICT Third-Party Risk"
+    text: >
+      Exit strategies, in particular the establishment of a mandatory adequate transition
+      period during which the ICT third-party service provider will continue providing
+      the relevant functions or ICT services with a view to reducing the risk of
+      disruption at the financial entity or ensuring its effective resolution or
+      restructuring.
+    keywords:
+      - "exit strategy"
+      - "exit plan"
+      - "transition period"
+      - "migration plan"
+      - "business continuity"
+      - "knowledge transfer"
+    pass_criteria: >
+      Contract includes an exit strategy with defined transition period.
+      Provider must maintain services during transition. Includes knowledge
+      transfer obligations.
+
+  - id: DORA-Art30-3-f
+    article: "30"
+    paragraph: "3(f)"
+    pillar: "ICT Third-Party Risk"
+    text: >
+      Conditions enabling, and the frequency of, the full audit performance or inspection
+      by the financial entity or an appointed third party, and corrective measures.
+    keywords:
+      - "audit frequency"
+      - "audit conditions"
+      - "third party audit"
+      - "penetration test"
+      - "security assessment"
+    pass_criteria: >
+      Contract specifies frequency and conditions for audits (financial entity or
+      appointed third party). Includes obligation to implement corrective measures
+      following audit findings.
+
+  - id: DORA-Art30-3-g
+    article: "30"
+    paragraph: "3(g)"
+    pillar: "ICT Third-Party Risk"
+    text: >
+      Provisions on business continuity capabilities of the ICT third-party service
+      provider, including a business continuity plan and ICT response and recovery plans,
+      that include ICT business continuity testing, along with obligations of the ICT
+      third-party service provider to participate in TLPT where requested by the
+      financial entity.
+    keywords:
+      - "business continuity"
+      - "BCP"
+      - "disaster recovery"
+      - "DR plan"
+      - "recovery plan"
+      - "TLPT"
+      - "resilience testing"
+    pass_criteria: >
+      Contract requires the provider to maintain a BCP and ICT recovery plan.
+      Includes obligation to participate in TLPT (Threat-Led Penetration Testing)
+      upon request.

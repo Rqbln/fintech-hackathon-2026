@@ -1,0 +1,35 @@
+"""FastAPI dependency providers.
+
+All state is populated during lifespan startup and read from app.state here.
+"""
+
+from fastapi import Request
+from neo4j import AsyncDriver
+
+
+def get_neo4j(request: Request) -> AsyncDriver:
+    return request.app.state.neo4j
+
+
+def get_settings(request: Request):
+    return request.app.state.settings
+
+
+def get_index(request: Request):
+    return request.app.state.index
+
+
+def get_citation_engine(request: Request):
+    return request.app.state.citation_engine
+
+
+def get_vector_store(request: Request):
+    return request.app.state.vector_store
+
+
+def get_embed_model(request: Request):
+    return request.app.state.embed_model
+
+
+def get_llm(request: Request):
+    return request.app.state.llm

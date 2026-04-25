@@ -1,0 +1,210 @@
+# Sovereign EU alternatives knowledge base
+# Used by RemediationAgent when proposing alternatives for high-concentration
+# or non-EU-jurisdiction vendors.
+# Cost delta: qualitative (lower/similar/higher). Quantitative is #TODO.
+
+alternatives:
+  - vendor: "AWS"
+    vendor_aliases: ["Amazon Web Services", "Amazon", "AWS Inc"]
+    jurisdiction: "US"
+    concentration_risk: high
+    proposals:
+      - name: "OVHcloud"
+        hq_country: "FR"
+        eu_sovereign: true
+        secnumcloud_certified: true
+        services_covered: ["compute", "object storage", "managed kubernetes", "databases"]
+        cost_delta: "similar"
+        feature_delta: >
+          No Lambda equivalent — use Scaleway Serverless Functions or container-based
+          workers. S3-compatible object storage (OVH Object Storage). RDS-compatible
+          managed DBs available. EU data residency guaranteed.
+        url: "https://www.ovhcloud.com"
+      - name: "Scaleway"
+        hq_country: "FR"
+        eu_sovereign: true
+        secnumcloud_certified: false
+        services_covered: ["compute", "serverless", "object storage", "managed kubernetes"]
+        cost_delta: "lower"
+        feature_delta: >
+          Strong serverless offering. Smaller ecosystem than OVHcloud.
+          Good for greenfield cloud-native workloads. EU data residency.
+        url: "https://www.scaleway.com"
+      - name: "Outscale (ONLYOFFICE)"
+        hq_country: "FR"
+        eu_sovereign: true
+        secnumcloud_certified: true
+        services_covered: ["compute", "storage", "networking"]
+        cost_delta: "similar"
+        feature_delta: >
+          SecNumCloud-qualified. Best fit for highly regulated workloads.
+          Smaller catalogue; strong compliance guarantees.
+        url: "https://en.outscale.com"
+
+  - vendor: "Microsoft Azure"
+    vendor_aliases: ["Microsoft", "Azure", "Microsoft 365", "M365", "Office 365"]
+    jurisdiction: "US"
+    concentration_risk: high
+    proposals:
+      - name: "Whaller"
+        hq_country: "FR"
+        eu_sovereign: true
+        secnumcloud_certified: true
+        services_covered: ["collaboration", "messaging", "file sharing"]
+        cost_delta: "lower"
+        feature_delta: >
+          Replaces Teams + SharePoint for collaboration. No email hosting
+          (pair with Proton Mail Business or La Poste Pro). SecNumCloud certified.
+        url: "https://whaller.com"
+      - name: "Nextcloud"
+        hq_country: "DE"
+        eu_sovereign: true
+        secnumcloud_certified: false
+        services_covered: ["file storage", "collaboration", "calendar", "email"]
+        cost_delta: "lower"
+        feature_delta: >
+          Self-hosted or hosted in EU. Full Microsoft 365 alternative for
+          files + collaboration. Requires on-prem ops capability.
+        url: "https://nextcloud.com"
+      - name: "OVHcloud (compute)"
+        hq_country: "FR"
+        eu_sovereign: true
+        secnumcloud_certified: true
+        services_covered: ["compute", "storage", "managed services"]
+        cost_delta: "similar"
+        feature_delta: >
+          Replaces Azure compute + storage. For M365 workloads specifically,
+          pair with Whaller or Nextcloud for collaboration layer.
+        url: "https://www.ovhcloud.com"
+
+  - vendor: "Google Cloud"
+    vendor_aliases: ["GCP", "Google Cloud Platform", "Google Workspace", "G Suite"]
+    jurisdiction: "US"
+    concentration_risk: medium
+    proposals:
+      - name: "OVHcloud"
+        hq_country: "FR"
+        eu_sovereign: true
+        secnumcloud_certified: true
+        services_covered: ["compute", "storage", "managed kubernetes", "AI/ML"]
+        cost_delta: "similar"
+        feature_delta: >
+          Strong GCP compute equivalent. No BigQuery equivalent at scale —
+          use ClickHouse or Apache Druid on OVH infrastructure.
+        url: "https://www.ovhcloud.com"
+      - name: "Scaleway"
+        hq_country: "FR"
+        eu_sovereign: true
+        secnumcloud_certified: false
+        services_covered: ["compute", "AI inference", "object storage"]
+        cost_delta: "lower"
+        feature_delta: >
+          Good for AI workloads (GPU instances). EU sovereign. No GKE equivalent
+          — use Scaleway Kapsule (managed Kubernetes).
+        url: "https://www.scaleway.com"
+
+  - vendor: "Snowflake"
+    vendor_aliases: ["Snowflake Inc", "Snowflake Data Cloud"]
+    jurisdiction: "US"
+    concentration_risk: medium
+    proposals:
+      - name: "ClickHouse Cloud (EU region)"
+        hq_country: "US (EU-hosted)"
+        eu_sovereign: false
+        secnumcloud_certified: false
+        services_covered: ["analytics", "data warehouse", "OLAP"]
+        cost_delta: "lower"
+        feature_delta: >
+          Columnar OLAP, blazing fast for analytics. Less feature-complete than
+          Snowflake (no data marketplace, limited data sharing). EU region
+          available (Frankfurt, Amsterdam).
+        url: "https://clickhouse.com"
+      - name: "Dremio (self-hosted on OVHcloud)"
+        hq_country: "US (self-hosted)"
+        eu_sovereign: true
+        secnumcloud_certified: false
+        services_covered: ["data lakehouse", "query federation", "data catalog"]
+        cost_delta: "similar"
+        feature_delta: >
+          Open source data lakehouse. Self-hosted on EU sovereign infra.
+          Strong data federation. Requires more ops than Snowflake SaaS.
+        url: "https://www.dremio.com"
+
+  - vendor: "Salesforce"
+    vendor_aliases: ["Salesforce CRM", "SFDC", "Salesforce Inc"]
+    jurisdiction: "US"
+    concentration_risk: low
+    proposals:
+      - name: "SugarCRM (EU-hosted)"
+        hq_country: "US (EU-hosted)"
+        eu_sovereign: false
+        secnumcloud_certified: false
+        services_covered: ["CRM", "sales automation", "customer service"]
+        cost_delta: "lower"
+        feature_delta: >
+          Strong Salesforce functional equivalent. EU hosting available.
+          Smaller ecosystem / fewer ISV integrations.
+        url: "https://www.sugarcrm.com"
+      - name: "Efficy CRM"
+        hq_country: "BE"
+        eu_sovereign: true
+        secnumcloud_certified: false
+        services_covered: ["CRM", "sales", "marketing", "service"]
+        cost_delta: "lower"
+        feature_delta: >
+          EU-headquartered CRM. Strong in European regulated industries (banking,
+          insurance). Data hosted in EU. Less mature ecosystem than Salesforce.
+        url: "https://www.efficy.com"
+
+  - vendor: "Datadog"
+    vendor_aliases: ["Datadog Inc", "Datadog APM"]
+    jurisdiction: "US"
+    concentration_risk: low
+    proposals:
+      - name: "Elastic (EU region)"
+        hq_country: "US (EU-hosted)"
+        eu_sovereign: false
+        secnumcloud_certified: false
+        services_covered: ["observability", "APM", "logging", "SIEM"]
+        cost_delta: "similar"
+        feature_delta: >
+          Full-stack observability. EU region available. Open source core
+          (Elasticsearch) can be self-hosted on sovereign infra. Less
+          out-of-the-box integrations than Datadog.
+        url: "https://www.elastic.co"
+      - name: "Grafana Cloud (EU)"
+        hq_country: "US (EU-hosted)"
+        eu_sovereign: false
+        secnumcloud_certified: false
+        services_covered: ["metrics", "logs", "traces", "dashboards"]
+        cost_delta: "lower"
+        feature_delta: >
+          Open source Grafana + Prometheus stack. EU hosting. Self-hostable.
+          No built-in APM — pair with Tempo for traces.
+        url: "https://grafana.com"
+
+  - vendor: "Twilio"
+    vendor_aliases: ["Twilio Inc", "Twilio SendGrid"]
+    jurisdiction: "US"
+    concentration_risk: low
+    proposals:
+      - name: "OVH SMS / OVHcloud Telecom"
+        hq_country: "FR"
+        eu_sovereign: true
+        secnumcloud_certified: false
+        services_covered: ["SMS", "voice", "messaging"]
+        cost_delta: "lower"
+        feature_delta: >
+          EU-sovereign SMS/voice. Less developer-friendly API than Twilio.
+          No video or email equivalent (pair with Mailjet for transactional email).
+        url: "https://www.ovhtelecom.fr"
+      - name: "Sinch (EU)"
+        hq_country: "SE"
+        eu_sovereign: true
+        secnumcloud_certified: false
+        services_covered: ["SMS", "email", "voice", "messaging APIs"]
+        cost_delta: "similar"
+        feature_delta: >
+          Swedish-headquartered EU alternative. Strong regulatory track record in
+          finance. Comparable API quality to Twilio.
+        url: "https://www.sinch.com"
