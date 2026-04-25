@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DORA AI Analyst — Test UI</title>
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+  header { background: #1e293b; border-bottom: 1px solid #334155; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 18px; font-weight: 700; color: #f8fafc; }
+  header span { font-size: 12px; background: #6366f1; color: white; padding: 2px 8px; border-radius: 99px; }
+  nav { background: #1e293b; border-bottom: 1px solid #334155; display: flex; gap: 0; padding: 0 24px; }
+  nav button { background: none; border: none; color: #94a3b8; padding: 12px 16px; cursor: pointer; font-size: 14px; border-bottom: 2px solid transparent; transition: all .15s; }
+  nav button:hover { color: #e2e8f0; }
+  nav button.active { color: #6366f1; border-bottom-color: #6366f1; }
+  .tab { display: none; padding: 24px; max-width: 1100px; margin: 0 auto; }
+  .tab.active { display: block; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+  .card h2 { font-size: 15px; font-weight: 600; color: #f1f5f9; margin-bottom: 16px; }
+  label { display: block; font-size: 13px; color: #94a3b8; margin-bottom: 4px; margin-top: 12px; }
+  label:first-of-type { margin-top: 0; }
+  input[type=text], input[type=file], textarea, select {
+    width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 6px;
+    color: #e2e8f0; padding: 8px 12px; font-size: 14px; font-family: inherit;
+  }
+  input[type=text]:focus, textarea:focus { outline: 2px solid #6366f1; border-color: transparent; }
+  textarea { resize: vertical; min-height: 80px; }
+  button.btn { background: #6366f1; color: white; border: none; border-radius: 6px; padding: 8px 16px; font-size: 14px; cursor: pointer; transition: background .15s; }
+  button.btn:hover { background: #4f46e5; }
+  button.btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+  button.btn.danger { background: #dc2626; }
+  button.btn.danger:hover { background: #b91c1c; }
+  button.btn.secondary { background: #334155; }
+  button.btn.secondary:hover { background: #475569; }
+  .row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+  .row .btn { flex-shrink: 0; height: 38px; }
+  pre { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 14px; font-size: 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; max-height: 400px; overflow-y: auto; color: #a5f3fc; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+  .badge.ok { background: #166534; color: #bbf7d0; }
+  .badge.error { background: #7f1d1d; color: #fecaca; }
+  .badge.warn { background: #713f12; color: #fef08a; }
+  .badge.met { background: #166534; color: #bbf7d0; }
+  .badge.partial { background: #713f12; color: #fef08a; }
+  .badge.unmet { background: #7f1d1d; color: #fecaca; }
+  .badge.unknown { background: #1e3a5f; color: #bae6fd; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #0f172a; color: #94a3b8; padding: 8px 12px; text-align: left; font-weight: 600; }
+  td { padding: 8px 12px; border-top: 1px solid #1e293b; vertical-align: top; }
+  tr:hover td { background: #1e293b44; }
+  .status-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+  .status-item { background: #0f172a; border-radius: 6px; padding: 12px; }
+  .status-item .key { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: .05em; }
+  .status-item .val { font-size: 14px; margin-top: 4px; }
+  #graph-container { height: 480px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; }
+  .finding { border-left: 3px solid #334155; padding: 12px 16px; margin-bottom: 12px; background: #0f172a; border-radius: 0 6px 6px 0; }
+  .finding.met { border-color: #22c55e; }
+  .finding.partially_met { border-color: #f59e0b; }
+  .finding.unmet { border-color: #ef4444; }
+  .finding.unknown { border-color: #60a5fa; }
+  .finding h3 { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .finding p { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+  .finding .evidence { font-size: 11px; color: #64748b; font-style: italic; margin-top: 6px; border-left: 2px solid #334155; padding-left: 8px; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #334155; border-top-color: #6366f1; border-radius: 50%; animation: spin .6s linear infinite; margin-right: 6px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .flex-end { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+  .markdown-output { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 16px; font-size: 13px; line-height: 1.7; max-height: 600px; overflow-y: auto; white-space: pre-wrap; }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 18px; font-size: 13px; z-index: 999; animation: fadein .2s; }
+  .toast.success { border-color: #22c55e; }
+  .toast.error { border-color: #ef4444; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>DORA AI Analyst</h1>
+  <span>Test UI</span>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('status')">Status</button>
+  <button onclick="showTab('ingest')">Ingest</button>
+  <button onclick="showTab('graph')">Graph</button>
+  <button onclick="showTab('analysis')">Gap Analysis</button>
+  <button onclick="showTab('report')">Report</button>
+</nav>
+
+<!-- ── STATUS ─────────────────────────────────────────────────────────────── -->
+<div id="tab-status" class="tab active">
+  <div class="card">
+    <h2>Health Check</h2>
+    <div id="health-grid" class="status-grid">
+      <div class="status-item"><div class="key">Status</div><div class="val" id="health-overall">—</div></div>
+    </div>
+    <div class="flex-end">
+      <button class="btn" onclick="checkHealth()">Refresh</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Session State</h2>
+    <div class="status-grid">
+      <div class="status-item"><div class="key">Last contract_id</div><div class="val" id="state-contract-id" style="font-size:12px;color:#60a5fa;">—</div></div>
+      <div class="status-item"><div class="key">Last session_id</div><div class="val" id="state-session-id" style="font-size:12px;color:#60a5fa;">—</div></div>
+      <div class="status-item"><div class="key">Last vendor</div><div class="val" id="state-vendor">—</div></div>
+      <div class="status-item"><div class="key">Criticality score</div><div class="val" id="state-score">—</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── INGEST ─────────────────────────────────────────────────────────────── -->
+<div id="tab-ingest" class="tab">
+  <div class="card">
+    <h2>Seed DORA Regulation</h2>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:12px;">Seeds DORA EU 2022/2554 into the vector store. Idempotent — safe to re-run.</p>
+    <div class="row">
+      <button class="btn" onclick="seedDora(false)">Seed DORA</button>
+      <button class="btn secondary" onclick="seedDora(true)">Force Re-seed</button>
+    </div>
+    <pre id="dora-result" style="margin-top:12px;display:none;"></pre>
+  </div>
+
+  <div class="card">
+    <h2>Upload Vendor Contract</h2>
+    <label>Contract PDF</label>
+    <input type="file" id="contract-file" accept=".pdf">
+    <label>Contract ID (optional — auto-generated from MD5 if blank)</label>
+    <input type="text" id="contract-id-input" placeholder="e.g. aws-contract-2025">
+    <div class="flex-end">
+      <button class="btn" id="upload-btn" onclick="uploadContract()">Upload &amp; Analyse</button>
+    </div>
+    <pre id="upload-result" style="margin-top:12px;display:none;"></pre>
+  </div>
+
+  <div class="card">
+    <h2>Concentration Ranking</h2>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:12px;">Vendors sorted by criticality_score (recomputed after each ingest).</p>
+    <button class="btn secondary" onclick="loadConcentration()">Load</button>
+    <div id="concentration-table" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+<!-- ── GRAPH ──────────────────────────────────────────────────────────────── -->
+<div id="tab-graph" class="tab">
+  <div class="card">
+    <h2>Dependency Graph</h2>
+    <div class="row" style="margin-bottom:12px;">
+      <div style="flex:1;">
+        <label>Root vendor (blank = full graph)</label>
+        <input type="text" id="graph-root" placeholder="e.g. AWS">
+      </div>
+      <div style="width:80px;">
+        <label>Depth</label>
+        <input type="text" id="graph-depth" value="2" style="width:80px;">
+      </div>
+      <button class="btn" onclick="loadGraph()">Load Graph</button>
+    </div>
+    <div id="graph-container"></div>
+    <div id="graph-legend" style="font-size:12px;color:#64748b;margin-top:8px;"></div>
+    <pre id="graph-raw" style="margin-top:12px;display:none;max-height:200px;"></pre>
+    <div class="flex-end">
+      <button class="btn secondary" onclick="document.getElementById('graph-raw').style.display = document.getElementById('graph-raw').style.display === 'none' ? 'block' : 'none'">Toggle Raw JSON</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ANALYSIS ───────────────────────────────────────────────────────────── -->
+<div id="tab-analysis" class="tab">
+  <div class="card">
+    <h2>Gap Analysis</h2>
+    <label>Contract ID(s) — comma-separated</label>
+    <input type="text" id="ga-contract-ids" placeholder="e.g. aws-contract-2025">
+    <label>Vendor name</label>
+    <input type="text" id="ga-vendor" placeholder="e.g. AWS">
+    <label>Contract text preview (paste first ~3000 chars for best results)</label>
+    <textarea id="ga-text" placeholder="Paste contract text excerpt here..." style="min-height:120px;"></textarea>
+    <label>Obligation IDs to evaluate (blank = all 12)</label>
+    <input type="text" id="ga-obligations" placeholder="e.g. DORA-Art30-2-a, DORA-Art30-2-b">
+    <div class="flex-end">
+      <button class="btn" id="ga-btn" onclick="runGapAnalysis()">Run Gap Analysis</button>
+    </div>
+  </div>
+
+  <div id="ga-results" style="display:none;">
+    <div class="card">
+      <h2>Results Summary</h2>
+      <div class="status-grid" id="ga-summary"></div>
+    </div>
+    <div class="card">
+      <h2>Findings</h2>
+      <div id="ga-findings"></div>
+    </div>
+    <div class="card">
+      <h2>Remediation Proposals</h2>
+      <div id="ga-proposals"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── REPORT ─────────────────────────────────────────────────────────────── -->
+<div id="tab-report" class="tab">
+  <div class="card">
+    <h2>Fetch Report</h2>
+    <label>Session ID</label>
+    <div class="row">
+      <input type="text" id="report-session-id" placeholder="Paste session_id from gap analysis response" style="flex:1;">
+      <button class="btn" onclick="loadReport('json')">JSON</button>
+      <button class="btn secondary" onclick="loadReport('markdown')">Markdown</button>
+    </div>
+  </div>
+
+  <div id="report-output" style="display:none;">
+    <div class="card">
+      <h2 id="report-title">Report</h2>
+      <div id="report-content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const state = { contractId: null, sessionId: null, vendor: null, score: null };
+
+function updateStateDisplay() {
+  document.getElementById('state-contract-id').textContent = state.contractId || '—';
+  document.getElementById('state-session-id').textContent = state.sessionId || '—';
+  document.getElementById('state-vendor').textContent = state.vendor || '—';
+  document.getElementById('state-score').textContent = state.score != null ? state.score.toFixed(3) : '—';
+}
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.innerHTML = loading ? '<span class="spinner"></span>Running…' : btn.dataset.label || btn.textContent;
+  if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+}
+
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(path, opts);
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = text; }
+  return { ok: res.ok, status: res.status, data };
+}
+
+// ── STATUS ─────────────────────────────────────────────────────────────────
+async function checkHealth() {
+  const { ok, data } = await apiFetch('/health');
+  const grid = document.getElementById('health-grid');
+  const overall = document.getElementById('health-overall');
+  overall.innerHTML = `<span class="badge ${ok ? 'ok' : 'error'}">${data.status || 'error'}</span>`;
+  const checks = data.checks || {};
+  grid.innerHTML = `
+    <div class="status-item"><div class="key">Overall</div><div class="val">${overall.outerHTML}</div></div>
+    ${Object.entries(checks).map(([k, v]) => `
+      <div class="status-item">
+        <div class="key">${k}</div>
+        <div class="val"><span class="badge ${v === 'ok' ? 'ok' : v.startsWith('error') ? 'error' : 'warn'}">${v}</span></div>
+      </div>`).join('')}`;
+}
+
+// ── INGEST ─────────────────────────────────────────────────────────────────
+async function seedDora(force) {
+  const el = document.getElementById('dora-result');
+  el.style.display = 'block';
+  el.textContent = 'Seeding…';
+  const { ok, data } = await apiFetch(`/api/ingest/dora?force=${force}`, { method: 'POST' });
+  el.textContent = JSON.stringify(data, null, 2);
+  toast(ok ? 'DORA seeded ✓' : 'Seed failed', ok ? 'success' : 'error');
+}
+
+async function uploadContract() {
+  const file = document.getElementById('contract-file').files[0];
+  if (!file) { toast('Select a PDF first', 'error'); return; }
+  const contractId = document.getElementById('contract-id-input').value.trim();
+
+  setLoading('upload-btn', true);
+  const form = new FormData();
+  form.append('file', file);
+  if (contractId) form.append('contract_id', contractId);
+
+  let url = '/api/ingest';
+  if (contractId) url += `?contract_id=${encodeURIComponent(contractId)}`;
+
+  const { ok, data } = await apiFetch(url, { method: 'POST', body: form });
+  setLoading('upload-btn', false);
+
+  const el = document.getElementById('upload-result');
+  el.style.display = 'block';
+  el.textContent = JSON.stringify(data, null, 2);
+
+  if (ok) {
+    state.contractId = data.contract_id;
+    state.vendor = data.vendor_name;
+    state.score = data.criticality_score;
+    updateStateDisplay();
+    // Pre-fill gap analysis form
+    document.getElementById('ga-contract-ids').value = data.contract_id;
+    document.getElementById('ga-vendor').value = data.vendor_name || '';
+    toast(`Ingested: ${data.vendor_name} (score ${data.criticality_score?.toFixed(3)}) ✓`);
+  } else {
+    toast('Ingest failed', 'error');
+  }
+}
+
+async function loadConcentration() {
+  const { ok, data } = await apiFetch('/api/graph/concentration');
+  const container = document.getElementById('concentration-table');
+  if (!ok || !Array.isArray(data)) {
+    container.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+    return;
+  }
+  if (data.length === 0) {
+    container.innerHTML = '<p style="color:#64748b;font-size:13px;">No vendors in graph yet.</p>';
+    return;
+  }
+  container.innerHTML = `<table>
+    <thead><tr><th>Vendor</th><th>Country</th><th>Score</th><th>Critical?</th></tr></thead>
+    <tbody>
+      ${data.map(v => `
+        <tr>
+          <td>${v.name || v.id}</td>
+          <td>${v.country || '—'}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:80px;background:#0f172a;border-radius:99px;height:6px;">
+                <div style="width:${Math.round((v.score||0)*100)}%;background:${scoreColor(v.score)};height:6px;border-radius:99px;"></div>
+              </div>
+              ${(v.score||0).toFixed(3)}
+            </div>
+          </td>
+          <td>${v.is_critical ? '<span class="badge error">YES</span>' : '<span class="badge ok">no</span>'}</td>
+        </tr>`).join('')}
+    </tbody></table>`;
+}
+
+function scoreColor(s) {
+  if (s > 0.7) return '#ef4444';
+  if (s > 0.4) return '#f59e0b';
+  return '#22c55e';
+}
+
+// ── GRAPH ──────────────────────────────────────────────────────────────────
+let network = null;
+
+async function loadGraph() {
+  const root = document.getElementById('graph-root').value.trim();
+  const depth = document.getElementById('graph-depth').value.trim() || '2';
+  let url = `/api/graph?depth=${depth}`;
+  if (root) url += `&root_vendor=${encodeURIComponent(root)}`;
+
+  const { ok, data } = await apiFetch(url);
+  const rawEl = document.getElementById('graph-raw');
+  rawEl.textContent = JSON.stringify(data, null, 2);
+
+  if (!ok || !data.nodes) { toast('Failed to load graph', 'error'); return; }
+
+  const colorMap = {
+    Vendor: '#6366f1', Service: '#22d3ee',
+    BusinessFunction: '#f59e0b', Contract: '#4ade80', DORAObligation: '#f87171',
+  };
+
+  const nodes = new vis.DataSet(data.nodes.map(n => ({
+    id: n.key,
+    label: n.attributes.label,
+    color: n.attributes.color || colorMap[n.attributes.node_type] || '#94a3b8',
+    size: Math.max(10, (n.attributes.size || 10) * 1.2),
+    font: { color: '#f1f5f9', size: 11 },
+    title: `${n.attributes.node_type} | score: ${n.attributes.criticality_score?.toFixed(3) ?? '—'} | ${n.attributes.country ?? ''}`,
+  })));
+
+  const edges = new vis.DataSet(data.edges.map(e => ({
+    id: e.key,
+    from: e.source,
+    to: e.target,
+    label: e.attributes.label,
+    color: { color: '#475569', highlight: '#6366f1' },
+    font: { color: '#64748b', size: 10, align: 'middle' },
+    arrows: 'to',
+    width: e.attributes.size || 1,
+  })));
+
+  const container = document.getElementById('graph-container');
+  if (network) network.destroy();
+  network = new vis.Network(container, { nodes, edges }, {
+    physics: { stabilization: { iterations: 150 }, barnesHut: { gravitationalConstant: -4000 } },
+    interaction: { hover: true, tooltipDelay: 100 },
+    layout: { improvedLayout: true },
+  });
+
+  const types = [...new Set(data.nodes.map(n => n.attributes.node_type))];
+  document.getElementById('graph-legend').innerHTML =
+    types.map(t => `<span style="margin-right:12px;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${colorMap[t]||'#94a3b8'};margin-right:4px;"></span>${t}</span>`).join('');
+
+  toast(`Graph loaded: ${data.nodes.length} nodes, ${data.edges.length} edges`);
+}
+
+// ── GAP ANALYSIS ───────────────────────────────────────────────────────────
+async function runGapAnalysis() {
+  const contractIdsRaw = document.getElementById('ga-contract-ids').value.trim();
+  const vendor = document.getElementById('ga-vendor').value.trim();
+  const text = document.getElementById('ga-text').value.trim();
+  const obligationsRaw = document.getElementById('ga-obligations').value.trim();
+
+  if (!contractIdsRaw || !vendor) { toast('Contract IDs and vendor name are required', 'error'); return; }
+
+  const contractIds = contractIdsRaw.split(',').map(s => s.trim()).filter(Boolean);
+  const obligationIds = obligationsRaw ? obligationsRaw.split(',').map(s => s.trim()).filter(Boolean) : null;
+
+  setLoading('ga-btn', true);
+  const body = { contract_ids: contractIds, vendor_name: vendor, contract_text_preview: text };
+  if (obligationIds) body.obligation_ids = obligationIds;
+
+  const { ok, data } = await apiFetch('/api/gap-analysis', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  setLoading('ga-btn', false);
+
+  if (!ok) { toast('Gap analysis failed: ' + JSON.stringify(data), 'error'); return; }
+
+  state.sessionId = data.session_id;
+  updateStateDisplay();
+  document.getElementById('report-session-id').value = data.session_id;
+
+  renderGapResults(data);
+  toast(`Analysis complete — session ${data.session_id}`);
+}
+
+function verdictBadge(v) {
+  const cls = v === 'met' ? 'met' : v === 'partially_met' ? 'partial' : v === 'unmet' ? 'unmet' : 'unknown';
+  const label = v === 'partially_met' ? 'partial' : v;
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function renderGapResults(data) {
+  const resultsEl = document.getElementById('ga-results');
+  resultsEl.style.display = 'block';
+
+  document.getElementById('ga-summary').innerHTML = `
+    <div class="status-item"><div class="key">Overall Risk</div><div class="val"><span class="badge ${data.overall_risk_level === 'low' ? 'ok' : data.overall_risk_level === 'critical' ? 'error' : 'warn'}">${data.overall_risk_level}</span></div></div>
+    <div class="status-item"><div class="key">Met</div><div class="val" style="color:#22c55e;font-size:20px;font-weight:700;">${data.obligations_met}</div></div>
+    <div class="status-item"><div class="key">Partial</div><div class="val" style="color:#f59e0b;font-size:20px;font-weight:700;">${data.obligations_partial}</div></div>
+    <div class="status-item"><div class="key">Unmet</div><div class="val" style="color:#ef4444;font-size:20px;font-weight:700;">${data.obligations_unmet}</div></div>
+    <div class="status-item"><div class="key">Session ID</div><div class="val" style="font-size:11px;color:#60a5fa;">${data.session_id}</div></div>`;
+
+  const findingsEl = document.getElementById('ga-findings');
+  findingsEl.innerHTML = (data.findings || []).map(f => `
+    <div class="finding ${f.verdict}">
+      <h3>Art.${f.article} §${f.paragraph} — ${verdictBadge(f.verdict)} <span class="badge ${f.risk_level === 'critical' ? 'error' : f.risk_level === 'high' ? 'warn' : 'ok'}" style="margin-left:6px;">${f.risk_level}</span></h3>
+      <p>${f.rationale}</p>
+      ${f.gap_description ? `<p style="color:#f87171;margin-top:4px;">Gap: ${f.gap_description}</p>` : ''}
+      ${(f.evidence_spans||[]).map(e => `<div class="evidence">"${e.text}"</div>`).join('')}
+    </div>`).join('');
+
+  const proposalsEl = document.getElementById('ga-proposals');
+  if (!data.remediation_proposals || data.remediation_proposals.length === 0) {
+    proposalsEl.innerHTML = '<p style="color:#64748b;font-size:13px;">No remediation proposals (all obligations met).</p>';
+    return;
+  }
+  proposalsEl.innerHTML = data.remediation_proposals.map(p => `
+    <div style="margin-bottom:20px;padding:16px;background:#0f172a;border-radius:8px;border:1px solid #334155;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <strong style="font-size:13px;">${p.obligation_id} — ${p.vendor_name}</strong>
+        <span class="badge ${p.priority === 'critical' ? 'error' : p.priority === 'high' ? 'warn' : 'ok'}">${p.priority}</span>
+      </div>
+      <p style="font-size:13px;font-weight:600;margin-bottom:8px;">${p.summary}</p>
+      <p style="font-size:12px;color:#94a3b8;white-space:pre-wrap;">${p.detail}</p>
+      ${p.sovereign_alternatives && p.sovereign_alternatives.length ? `
+        <div style="margin-top:12px;">
+          <p style="font-size:11px;color:#64748b;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;">EU-Sovereign alternatives</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            ${p.sovereign_alternatives.map(a => `
+              <div style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:8px 12px;font-size:12px;">
+                <strong>${a.name}</strong> <span style="color:#64748b;">(${a.hq_country})</span><br>
+                ${a.eu_sovereign ? '<span class="badge ok" style="font-size:10px;">EU Sovereign</span>' : ''}
+                ${a.certification ? `<span class="badge ok" style="font-size:10px;margin-left:4px;">${a.certification}</span>` : ''}
+                <br><span style="color:#94a3b8;">Cost: ${a.cost_delta || '—'}</span>
+              </div>`).join('')}
+          </div>
+        </div>` : ''}
+    </div>`).join('');
+
+  resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── REPORT ─────────────────────────────────────────────────────────────────
+async function loadReport(fmt) {
+  const sessionId = document.getElementById('report-session-id').value.trim();
+  if (!sessionId) { toast('Enter a session ID', 'error'); return; }
+
+  const url = fmt === 'markdown' ? `/api/report/${sessionId}/markdown` : `/api/report/${sessionId}`;
+  const { ok, status, data } = await apiFetch(url);
+
+  const outputEl = document.getElementById('report-output');
+  const contentEl = document.getElementById('report-content');
+  const titleEl = document.getElementById('report-title');
+
+  outputEl.style.display = 'block';
+
+  if (!ok) {
+    titleEl.textContent = `Error ${status}`;
+    contentEl.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+    return;
+  }
+
+  if (fmt === 'markdown') {
+    titleEl.textContent = 'Report (Markdown)';
+    contentEl.innerHTML = `<div class="markdown-output">${escapeHtml(typeof data === 'string' ? data : JSON.stringify(data))}</div>
+      <div class="flex-end"><button class="btn secondary" onclick="copyText('${sessionId}')">Copy</button></div>`;
+  } else {
+    titleEl.textContent = `Report — ${data.session_id || sessionId}`;
+    // Re-render structured view
+    renderGapResults(data);
+    contentEl.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+  }
+
+  outputEl.scrollIntoView({ behavior: 'smooth' });
+  toast('Report loaded');
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function copyText(sessionId) {
+  const el = document.getElementById('report-content').querySelector('.markdown-output');
+  navigator.clipboard.writeText(el ? el.textContent : '').then(() => toast('Copied to clipboard'));
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+checkHealth();
+updateStateDisplay();
+</script>
+</body>
+</html>

@@ -1,9 +1,11 @@
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import structlog
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from llama_index.core import Settings as LlamaSettings
 from llama_index.core import VectorStoreIndex
 from neo4j import AsyncGraphDatabase
@@ -81,6 +83,14 @@ app.include_router(analysis.router, prefix="/api", tags=["analysis"])
 app.include_router(remediation.router, prefix="/api", tags=["remediation"])
 app.include_router(report.router, prefix="/api", tags=["report"])
 app.include_router(sessions.router, prefix="/api", tags=["sessions"])
+
+_STATIC = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=_STATIC), name="static")
+
+
+@app.get("/", include_in_schema=False)
+async def ui():
+    return FileResponse(_STATIC / "index.html")
 
 
 @app.get("/health", summary="Health check — pings all dependencies")

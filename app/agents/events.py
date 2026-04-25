@@ -13,11 +13,13 @@ class DocParsedEvent(Event):
 
 class ExtractedEvent(Event):
     extraction: ContractExtraction
+    node_ids: list[str]
 
 
 class GraphUpdatedEvent(Event):
     extraction: ContractExtraction
     vendor_id: str
+    node_ids: list[str]
 
 
 class IngestionResult(Event):

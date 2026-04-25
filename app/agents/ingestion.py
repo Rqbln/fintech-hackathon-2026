@@ -58,13 +58,12 @@ class ContractIngestionWorkflow(Workflow):
     @step
     async def extract(self, ev: DocParsedEvent) -> ExtractedEvent:
         extraction = await run_extraction(self._llm, ev.contract_id, ev.full_text)
-        # Carry over node_ids onto the extraction for traceability
-        return ExtractedEvent(extraction=extraction)
+        return ExtractedEvent(extraction=extraction, node_ids=ev.node_ids)
 
     @step
     async def build_graph_step(self, ev: ExtractedEvent) -> GraphUpdatedEvent:
         vendor_id = await build_graph(self._neo4j, ev.extraction)
-        return GraphUpdatedEvent(extraction=ev.extraction, vendor_id=vendor_id)
+        return GraphUpdatedEvent(extraction=ev.extraction, vendor_id=vendor_id, node_ids=ev.node_ids)
 
     @step
     async def score_risks(self, ev: GraphUpdatedEvent) -> StopEvent:
@@ -77,7 +76,7 @@ class ContractIngestionWorkflow(Workflow):
 
         result = IngestionResult(
             contract_id=ev.extraction.contract_id,
-            node_ids=[],  # populated from parse_and_index — passed via extraction for now
+            node_ids=ev.node_ids,
             vendor_id=ev.vendor_id,
             vendor_name=ev.extraction.vendor_name,
             criticality_score=vendor_score,
