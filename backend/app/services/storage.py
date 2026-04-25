@@ -2,11 +2,11 @@
 
 from google.cloud import storage
 
-from app.config import DOCUMENTS_BUCKET, REFERENCE_BUCKET
+from app.config import DOCUMENTS_BUCKET, GCP_PROJECT, REFERENCE_BUCKET
 
 
 def get_storage_client() -> storage.Client:
-    return storage.Client()
+    return storage.Client(project=GCP_PROJECT)
 
 
 async def upload_document(content: bytes, filename: str) -> str:

@@ -82,6 +82,26 @@ def _get_model() -> GenerativeModel:
     )
 
 
+def _extract_json(text: str) -> dict:
+    """
+    Extract the first valid JSON object from Gemini output.
+    Handles: thinking prefix, trailing commas, // comments.
+    """
+    import re
+    start = text.find("{")
+    if start == -1:
+        raise ValueError("No JSON object found in response")
+    end = text.rfind("}")
+    if end == -1 or end <= start:
+        raise ValueError("No closing brace found")
+    candidate = text[start:end + 1]
+    # Strip // line comments (not valid JSON but Gemini sometimes emits them)
+    candidate = re.sub(r"//[^\n]*", "", candidate)
+    # Strip trailing commas before } or ]
+    candidate = re.sub(r",\s*([}\]])", r"\1", candidate)
+    return json.loads(candidate)
+
+
 async def _call_gemini(prompt: str) -> dict:
     """Call Gemini with JSON mode. Returns parsed dict or error dict."""
     import asyncio
@@ -96,7 +116,10 @@ async def _call_gemini(prompt: str) -> dict:
 
     try:
         response = await asyncio.to_thread(_sync_call)
-        return json.loads(response.text)
+        try:
+            return json.loads(response.text)
+        except json.JSONDecodeError:
+            return _extract_json(response.text)
     except Exception as e:
         log.error("Gemini call failed: %s", e)
         return {"error": str(e)}
