@@ -3,7 +3,9 @@ name: Deploy Backend
 on:
   push:
     branches: [main]
-    paths: [backend/**]
+    paths:
+      - backend/**
+      - reference_data/**
 
 env:
   GCP_PROJECT: regagent-dora-2026
@@ -35,7 +37,8 @@ jobs:
 
       - name: Build and push
         run: |
-          docker build -t ${{ env.IMAGE }}:${{ github.sha }} -t ${{ env.IMAGE }}:latest backend/
+          # Build context = repo root so Dockerfile can COPY reference_data/
+          docker build -f backend/Dockerfile -t ${{ env.IMAGE }}:${{ github.sha }} -t ${{ env.IMAGE }}:latest .
           docker push ${{ env.IMAGE }}:${{ github.sha }}
           docker push ${{ env.IMAGE }}:latest
 
@@ -46,10 +49,11 @@ jobs:
             --region=${{ env.GCP_REGION }} \
             --platform=managed \
             --service-account=regagent-runtime-sa@regagent-dora-2026.iam.gserviceaccount.com \
-            --set-env-vars="GCP_PROJECT=${{ env.GCP_PROJECT }},GCP_REGION=${{ env.GCP_REGION }},DOCAI_PROCESSOR_ID=9a4312989d6fb591" \
+            --set-env-vars="GCP_PROJECT=${{ env.GCP_PROJECT }},GCP_REGION=${{ env.GCP_REGION }},DOCAI_PROCESSOR_ID=9a4312989d6fb591,VECTOR_STORE_BACKEND=firestore" \
             --allow-unauthenticated \
-            --memory=1Gi \
-            --cpu=1 \
+            --memory=2Gi \
+            --cpu=2 \
             --min-instances=0 \
             --max-instances=3 \
+            --timeout=300 \
             --quiet
