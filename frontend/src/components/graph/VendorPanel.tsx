@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, Globe, AlertTriangle, Zap } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import type { NodeAttributes, ObligationFinding, RemediationProposal, ReportArtifact } from "@/lib/types";
 import { streamGapAnalysis } from "@/lib/api";
 import { scoreToColor, scoreToLabel, riskBadgeClass, cn } from "@/lib/utils";
@@ -212,7 +213,14 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
                 {execSummary && (
                   <div className="bg-slate-800/60 rounded-lg p-3 border border-slate-700/60 mb-4">
                     <p className="text-[11px] text-slate-400 uppercase tracking-wider mb-1.5 font-semibold">AI Summary</p>
-                    <p className="text-xs text-slate-300 leading-relaxed">{execSummary}</p>
+                    <div className="text-xs text-slate-300 leading-relaxed prose prose-invert prose-xs max-w-none
+                      [&_ul]:list-disc [&_ul]:pl-4 [&_ul]:space-y-1
+                      [&_ol]:list-decimal [&_ol]:pl-4 [&_ol]:space-y-1
+                      [&_li]:text-slate-300
+                      [&_strong]:text-slate-100 [&_strong]:font-semibold
+                      [&_p]:mb-1.5 [&_p:last-child]:mb-0">
+                      <ReactMarkdown>{execSummary}</ReactMarkdown>
+                    </div>
                   </div>
                 )}
                 {findings.map((f) => (
