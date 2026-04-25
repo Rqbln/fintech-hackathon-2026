@@ -1,0 +1,63 @@
+{
+  "roi_model": "B_01.01",
+  "entity": {
+    "legal_name": "Eurobank Investment Solutions S.A.",
+    "trading_name": "Eurobank IS",
+    "lei_code": "549300EXAMPLE000EBIS",
+    "entity_type": "UCITS Management Company",
+    "country": "FR",
+    "city": "Paris",
+    "competent_authority": "AMF (Autorité des Marchés Financiers)",
+    "competent_authority_country": "FR",
+    "total_assets_under_management_eur": 18700000000,
+    "number_of_employees": 245,
+    "fiscal_year_end": "2025-12-31",
+    "parent_group": {
+      "legal_name": "Eurobank N.V.",
+      "lei_code": "549300EXAMPLE000EBNV",
+      "country": "NL",
+      "relationship": "subsidiary"
+    }
+  },
+  "branches": [
+    {
+      "roi_model": "B_01.02",
+      "branch_id": "EBIS-LUX-001",
+      "country": "LU",
+      "city": "Luxembourg",
+      "competent_authority": "CSSF",
+      "employees": 42
+    },
+    {
+      "roi_model": "B_01.02",
+      "branch_id": "EBIS-AMS-001",
+      "country": "NL",
+      "city": "Amsterdam",
+      "competent_authority": "AFM",
+      "employees": 38
+    }
+  ],
+  "group_structure": {
+    "roi_model": "B_01.03",
+    "parent": {
+      "lei_code": "549300EXAMPLE000EBNV",
+      "name": "Eurobank N.V.",
+      "country": "NL",
+      "is_regulated": true
+    },
+    "subsidiaries": [
+      {
+        "lei_code": "549300EXAMPLE000EBIS",
+        "name": "Eurobank Investment Solutions S.A.",
+        "country": "FR",
+        "relationship": "wholly_owned_subsidiary"
+      },
+      {
+        "lei_code": "549300EXAMPLE000EBWM",
+        "name": "Eurobank Wealth Management",
+        "country": "CH",
+        "relationship": "wholly_owned_subsidiary"
+      }
+    ]
+  }
+}

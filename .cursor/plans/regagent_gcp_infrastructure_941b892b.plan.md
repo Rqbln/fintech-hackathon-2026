@@ -28,10 +28,10 @@ todos:
     status: completed
   - id: create-branches
     content: Creer la branche dev, faire le commit initial sur main et pousser
-    status: in_progress
+    status: completed
   - id: validate-infra
     content: Verifier facturation, APIs, buckets, processeur Document AI, et tester la connexion WIF
-    status: pending
+    status: completed
 isProject: false
 ---
 

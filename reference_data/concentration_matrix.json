@@ -1,0 +1,60 @@
+{
+  "description": "Cross-vendor dependency matrix showing shared infrastructure and concentration risks.",
+  "infrastructure_dependencies": [
+    {
+      "infrastructure_provider": "Amazon Web Services (AWS)",
+      "infrastructure_type": "Cloud IaaS/PaaS",
+      "dependent_vendors": [
+        {"vendor_id": "VND-001", "vendor_name": "AWS (direct)", "dependency_type": "primary", "regions": ["eu-west-1", "eu-central-1"]},
+        {"vendor_id": "VND-005", "vendor_name": "CyberArk", "dependency_type": "hosting", "regions": ["eu-central-1"]}
+      ],
+      "affected_functions": ["FN-002", "FN-003", "FN-005", "FN-006"],
+      "concentration_risk": "HIGH - AWS outage in eu-central-1 would simultaneously impact cloud infrastructure AND identity security. 2 of 5 vendors depend on AWS.",
+      "substitutability": "LOW for short-term (weeks), MEDIUM for long-term (months)"
+    },
+    {
+      "infrastructure_provider": "Microsoft Azure",
+      "infrastructure_type": "Cloud IaaS/PaaS",
+      "dependent_vendors": [
+        {"vendor_id": "VND-004", "vendor_name": "BlackRock (Aladdin)", "dependency_type": "hosting", "regions": ["US East", "UK South"]}
+      ],
+      "affected_functions": ["FN-001", "FN-002", "FN-004"],
+      "concentration_risk": "MEDIUM - Azure hosts Aladdin, which supports 3 critical functions. No other vendor depends on Azure.",
+      "substitutability": "VERY LOW - Aladdin is tightly coupled to Azure"
+    },
+    {
+      "infrastructure_provider": "US-based data processing",
+      "infrastructure_type": "Geographic concentration",
+      "dependent_vendors": [
+        {"vendor_id": "VND-002", "vendor_name": "Bloomberg", "dependency_type": "primary processing", "regions": ["US"]},
+        {"vendor_id": "VND-004", "vendor_name": "BlackRock (Aladdin)", "dependency_type": "primary processing", "regions": ["US"]}
+      ],
+      "affected_functions": ["FN-001", "FN-002", "FN-004", "FN-005"],
+      "concentration_risk": "CRITICAL - 2 critical vendors process data primarily in the US, outside EEA. Potential conflict with bank data residency rule BR-003 and DORA Art. 30(2)(b).",
+      "substitutability": "VERY LOW - no EU-native alternatives for Bloomberg Terminal or Aladdin"
+    }
+  ],
+  "vendor_criticality_summary": {
+    "single_points_of_failure": [
+      {
+        "vendor_id": "VND-004",
+        "vendor_name": "BlackRock (Aladdin)",
+        "critical_functions_supported": 3,
+        "functions": ["FN-001", "FN-002", "FN-004"],
+        "risk": "CRITICAL - Aladdin unavailability would halt portfolio management, risk measurement, AND fund accounting simultaneously. No alternative platform in place."
+      },
+      {
+        "vendor_id": "VND-003",
+        "vendor_name": "SWIFT",
+        "critical_functions_supported": 2,
+        "functions": ["FN-001", "FN-004"],
+        "risk": "HIGH - SWIFT disruption would block trade settlement and payment messaging. However, SWIFT's 99.999% SLA and multi-OPC architecture mitigate this."
+      }
+    ],
+    "hidden_dependency_chains": [
+      "CyberArk (VND-005) runs on AWS (VND-001). If AWS eu-central-1 fails, both cloud infrastructure AND identity security fail simultaneously.",
+      "Aladdin (VND-004) runs on Azure, which runs on Snowflake for analytics. Three layers of dependency for risk calculations.",
+      "Bloomberg (VND-002) data feeds through Equinix colocation. Equinix failure could impact both Bloomberg and other co-located services."
+    ]
+  }
+}

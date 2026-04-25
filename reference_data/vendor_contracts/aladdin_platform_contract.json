@@ -1,0 +1,96 @@
+{
+  "contract_ref": "CTR-BLK-2024-001",
+  "vendor": "BlackRock Financial Management, Inc.",
+  "vendor_id": "VND-004",
+  "document_type": "platform_service_agreement",
+  "extracted_clauses": [
+    {
+      "clause_id": "BLK-CL-001",
+      "category": "service_description",
+      "title": "Aladdin Platform Services",
+      "text": "BlackRock provides access to the Aladdin investment management platform including: Portfolio Management, Order Management System (OMS), Risk Analytics (multi-factor VaR, Monte Carlo simulations, stress testing), Compliance Engine, Aladdin Wealth, and Aladdin Copilot AI assistant. The platform is delivered as a managed service (SaaS) hosted on BlackRock's infrastructure.",
+      "dora_relevance": "Art. 30(2)(a)"
+    },
+    {
+      "clause_id": "BLK-CL-002",
+      "category": "data_residency",
+      "title": "Data Location",
+      "text": "Aladdin platform infrastructure is hosted primarily in the United States (East Coast data centers). A disaster recovery site is maintained in the United Kingdom. Client portfolio data, transaction history, and risk calculations are processed and stored in the US. BlackRock is evaluating EU-hosted options for European clients but does not currently offer an EU-only deployment model.",
+      "dora_relevance": "Art. 30(2)(b)"
+    },
+    {
+      "clause_id": "BLK-CL-003",
+      "category": "data_protection",
+      "title": "Data Security",
+      "text": "BlackRock maintains comprehensive security controls aligned with ISO 27001 and NIST CSF frameworks. Data is encrypted at rest using AES-256 and in transit using TLS 1.2+. Multi-factor authentication is required for all user access. BlackRock performs annual penetration testing and maintains a 24/7 Security Operations Center.",
+      "dora_relevance": "Art. 30(2)(c)"
+    },
+    {
+      "clause_id": "BLK-CL-004",
+      "category": "rto_rpo",
+      "title": "Business Continuity",
+      "text": "BlackRock maintains a business continuity program for the Aladdin platform. The target Recovery Time Objective is 12 hours for full platform restoration. Recovery Point Objective is 4 hours (data loss window). BlackRock conducts semi-annual DR testing. During DR events, a read-only mode may be activated for portfolio viewing while write operations are restored.",
+      "dora_relevance": "Art. 30(2)(d)",
+      "sla_values": {
+        "availability": "99.5%",
+        "rto_hours": 12,
+        "rpo_hours": 4,
+        "dr_testing_frequency": "semi-annual"
+      }
+    },
+    {
+      "clause_id": "BLK-CL-005",
+      "category": "incident_reporting",
+      "title": "Incident Management",
+      "text": "BlackRock will notify the Client of material security incidents or platform outages within 24 hours of detection. Severity 1 incidents (complete platform unavailability) trigger immediate notification via the Aladdin Client Portal and email. Root cause analysis reports are provided within 10 business days of incident resolution.",
+      "dora_relevance": "Art. 30(2)(e)",
+      "sla_values": {
+        "notification_timeframe": "24 hours (general), immediate (Sev 1)",
+        "root_cause_analysis": "10 business days"
+      }
+    },
+    {
+      "clause_id": "BLK-CL-006",
+      "category": "audit_rights",
+      "title": "Audit and Inspection",
+      "text": "BlackRock provides annual SOC 1 Type II and SOC 2 Type II reports. On-site audits of BlackRock's Aladdin infrastructure are permitted once per year with 60 days' prior written notice, subject to reasonable scope limitations and confidentiality agreements. Audit findings must be shared with BlackRock before distribution to third parties.",
+      "dora_relevance": "Art. 30(2)(f)",
+      "audit_provisions": {
+        "onsite_audit_allowed": true,
+        "audit_frequency": "annual",
+        "notice_period_days": 60,
+        "third_party_audit": true,
+        "compliance_reports_available": ["SOC 1 Type II", "SOC 2 Type II", "ISO 27001"]
+      }
+    },
+    {
+      "clause_id": "BLK-CL-007",
+      "category": "exit_strategy",
+      "title": "Termination and Transition",
+      "text": "The agreement has a minimum term of 5 years. Early termination requires 18 months' written notice and payment of an early termination fee equal to 50% of the remaining contract value. Upon termination, BlackRock will provide transition assistance for a period of 6 months at standard hourly rates. Client data will be made available for export in CSV and FIX formats within 90 days of termination. Custom analytics models built on Aladdin are not exportable.",
+      "dora_relevance": "Art. 30(2)(g)",
+      "exit_provisions": {
+        "minimum_term_years": 5,
+        "notice_period_months": 18,
+        "early_termination_fee": "50% of remaining contract value",
+        "transition_assistance_months": 6,
+        "transition_assistance_cost": "standard hourly rates",
+        "data_retrieval_days": 90,
+        "data_portability": "CSV and FIX formats only, no custom models"
+      }
+    },
+    {
+      "clause_id": "BLK-CL-008",
+      "category": "subcontracting",
+      "title": "Subcontractors and Sub-processors",
+      "text": "BlackRock utilizes Microsoft Azure for cloud hosting of the Aladdin platform and Snowflake for data warehousing. BlackRock will notify the Client of material changes to its sub-processor list 30 days in advance. The Client may object to new sub-processors within 15 days of notification; however, if the objection cannot be resolved, BlackRock may terminate the affected services.",
+      "dora_relevance": "Art. 30(3)",
+      "subcontracting_provisions": {
+        "prior_approval_required": false,
+        "notification_mechanism": "30 days advance notice",
+        "right_to_object": true,
+        "objection_resolution": "BlackRock may terminate affected services"
+      }
+    }
+  ]
+}

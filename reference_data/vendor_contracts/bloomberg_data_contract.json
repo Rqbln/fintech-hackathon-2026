@@ -1,0 +1,90 @@
+{
+  "contract_ref": "CTR-BBG-2024-001",
+  "vendor": "Bloomberg Finance L.P.",
+  "vendor_id": "VND-002",
+  "document_type": "enterprise_license_agreement",
+  "extracted_clauses": [
+    {
+      "clause_id": "BBG-CL-001",
+      "category": "service_description",
+      "title": "Licensed Services",
+      "text": "Bloomberg provides access to the Bloomberg Terminal platform, including real-time and delayed market data, Bloomberg PORT risk analytics, Bloomberg ESG scores, and Bloomberg Data License for systematic data feeds. Services delivered via dedicated Bloomberg hardware appliances and BPS network.",
+      "dora_relevance": "Art. 30(2)(a)"
+    },
+    {
+      "clause_id": "BBG-CL-002",
+      "category": "data_residency",
+      "title": "Data Hosting and Processing",
+      "text": "Bloomberg data is processed and stored primarily in data centers located in the United States (New Jersey) and the United Kingdom (London). Bloomberg does not offer EU-only data residency options for its core Terminal services. Data feeds via Bloomberg Data License may be cached locally by the Customer.",
+      "dora_relevance": "Art. 30(2)(b)"
+    },
+    {
+      "clause_id": "BBG-CL-003",
+      "category": "data_protection",
+      "title": "Information Security",
+      "text": "Bloomberg maintains an information security program aligned with ISO 27001 standards. All data in transit is encrypted using TLS 1.3. Bloomberg Terminal communications use the proprietary Bloomberg Private Network (BPS) with end-to-end encryption. SOC 2 Type II reports are available upon request.",
+      "dora_relevance": "Art. 30(2)(c)"
+    },
+    {
+      "clause_id": "BBG-CL-004",
+      "category": "rto_rpo",
+      "title": "Service Availability",
+      "text": "Bloomberg targets 99.9% availability for Bloomberg Terminal services during market hours (07:00-22:00 CET, Monday-Friday). Bloomberg maintains redundant data centers with automatic failover. In the event of a major disruption, Bloomberg targets restoration of core services within 2 hours. Historical data feeds have a separate SLA with 24-hour RTO.",
+      "dora_relevance": "Art. 30(2)(d)",
+      "sla_values": {
+        "availability": "99.9%",
+        "rto_hours": 2,
+        "rpo_hours": 0,
+        "scope": "market hours only"
+      }
+    },
+    {
+      "clause_id": "BBG-CL-005",
+      "category": "incident_reporting",
+      "title": "Service Disruption Notification",
+      "text": "Bloomberg will notify affected clients of material service disruptions within 1 hour via the Bloomberg Terminal HELP function and email. Post-incident reports are provided within 5 business days.",
+      "dora_relevance": "Art. 30(2)(e)",
+      "sla_values": {
+        "notification_timeframe": "1 hour",
+        "root_cause_analysis": "5 business days"
+      }
+    },
+    {
+      "clause_id": "BBG-CL-006",
+      "category": "audit_rights",
+      "title": "Audit Rights",
+      "text": "Bloomberg makes SOC 2 Type II reports available to clients annually. Bloomberg does not permit on-site audits of its operations. Clients may submit written security questionnaires which Bloomberg will address within 30 business days.",
+      "dora_relevance": "Art. 30(2)(f)",
+      "audit_provisions": {
+        "onsite_audit_allowed": false,
+        "third_party_audit": false,
+        "compliance_reports_available": ["SOC 2 Type II", "ISO 27001"]
+      }
+    },
+    {
+      "clause_id": "BBG-CL-007",
+      "category": "exit_strategy",
+      "title": "Termination",
+      "text": "Either party may terminate with 12 months' written notice. Upon termination, Bloomberg will disable access to all services. Customer data stored on Bloomberg systems will be retained for 30 days after termination, after which it will be permanently deleted. No data export tools are provided for Terminal data. Bloomberg Data License feeds may be exported in standard formats.",
+      "dora_relevance": "Art. 30(2)(g)",
+      "exit_provisions": {
+        "notice_period_months": 12,
+        "data_retrieval_days": 30,
+        "transition_assistance": false,
+        "data_portability": "limited - Data License only"
+      }
+    },
+    {
+      "clause_id": "BBG-CL-008",
+      "category": "subcontracting",
+      "title": "Third-Party Service Providers",
+      "text": "Bloomberg uses Equinix for data center colocation services. Bloomberg does not subcontract core data processing or analytics functions. Changes to material subcontractors will be communicated to enterprise clients in advance.",
+      "dora_relevance": "Art. 30(3)",
+      "subcontracting_provisions": {
+        "prior_approval_required": false,
+        "notification_mechanism": "advance communication to enterprise clients",
+        "right_to_object": false
+      }
+    }
+  ]
+}

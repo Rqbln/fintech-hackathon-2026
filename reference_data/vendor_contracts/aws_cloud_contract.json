@@ -1,0 +1,89 @@
+{
+  "contract_ref": "CTR-AWS-2023-001",
+  "vendor": "Amazon Web Services EMEA SARL",
+  "vendor_id": "VND-001",
+  "document_type": "master_service_agreement",
+  "extracted_clauses": [
+    {
+      "clause_id": "AWS-CL-001",
+      "category": "service_description",
+      "title": "Service Scope",
+      "text": "AWS provides cloud computing services including Amazon EC2, Amazon S3, Amazon RDS, Amazon VPC, and AWS CloudWatch. Services are provided on a self-service, on-demand basis via the AWS Management Console and APIs. The Customer is responsible for configuring and managing their resources within the AWS environment.",
+      "dora_relevance": "Art. 30(2)(a)"
+    },
+    {
+      "clause_id": "AWS-CL-002",
+      "category": "data_residency",
+      "title": "Data Location and Processing",
+      "text": "Customer may specify the AWS Region(s) in which Customer Content will be stored. AWS will not move Customer Content from the Customer's selected Region(s) except as necessary to provide the Services or as required by law. Available EU regions: eu-west-1 (Ireland), eu-central-1 (Frankfurt), eu-west-3 (Paris), eu-south-1 (Milan), eu-north-1 (Stockholm).",
+      "dora_relevance": "Art. 30(2)(b)"
+    },
+    {
+      "clause_id": "AWS-CL-003",
+      "category": "data_protection",
+      "title": "Security and Data Protection",
+      "text": "AWS implements and maintains administrative, physical, and technical safeguards for the protection of the security, confidentiality, and integrity of Customer Content in accordance with the AWS Security Standards. AWS provides encryption at rest (AES-256) and in transit (TLS 1.2+) for all services.",
+      "dora_relevance": "Art. 30(2)(c)"
+    },
+    {
+      "clause_id": "AWS-CL-004",
+      "category": "rto_rpo",
+      "title": "Service Level Agreement",
+      "text": "AWS commits to a Monthly Uptime Percentage of at least 99.99% for Amazon EC2 and 99.9% for Amazon S3. In the event of disruption, AWS targets a Recovery Time Objective of 4 hours for multi-AZ deployments. Recovery Point Objective depends on Customer backup configuration. AWS does not guarantee specific RTO or RPO for single-AZ deployments.",
+      "dora_relevance": "Art. 30(2)(d)",
+      "sla_values": {
+        "availability": "99.99%",
+        "rto_hours": 4,
+        "rpo_hours": null,
+        "rpo_note": "Customer-managed, depends on backup configuration"
+      }
+    },
+    {
+      "clause_id": "AWS-CL-005",
+      "category": "incident_reporting",
+      "title": "Security Incident Notification",
+      "text": "AWS will notify the Customer without undue delay after becoming aware of a Security Incident. Notification will be delivered via the AWS Health Dashboard and email to the designated security contact. AWS will provide information regarding the nature and consequences of the incident. AWS does not commit to a specific notification timeframe in hours.",
+      "dora_relevance": "Art. 30(2)(e)",
+      "sla_values": {
+        "notification_timeframe": "without undue delay (not specified in hours)",
+        "root_cause_analysis": "provided upon request"
+      }
+    },
+    {
+      "clause_id": "AWS-CL-006",
+      "category": "audit_rights",
+      "title": "Audit and Compliance",
+      "text": "AWS makes available to the Customer SOC 1, SOC 2, and SOC 3 reports, ISO 27001 certification, and other compliance reports via AWS Artifact. AWS does not permit individual customer on-site audits of its data centers due to security and confidentiality constraints. Customers may engage a mutually agreed-upon third-party auditor.",
+      "dora_relevance": "Art. 30(2)(f)",
+      "audit_provisions": {
+        "onsite_audit_allowed": false,
+        "third_party_audit": true,
+        "compliance_reports_available": ["SOC 1 Type II", "SOC 2 Type II", "ISO 27001", "C5"]
+      }
+    },
+    {
+      "clause_id": "AWS-CL-007",
+      "category": "exit_strategy",
+      "title": "Termination and Data Retrieval",
+      "text": "Upon termination, the Customer has 90 days to retrieve all Customer Content from AWS. After this period, AWS will delete Customer Content in accordance with its data deletion policies. AWS provides tools for data export including AWS DataSync and S3 Transfer Acceleration. No transition assistance services are included in the standard agreement.",
+      "dora_relevance": "Art. 30(2)(g)",
+      "exit_provisions": {
+        "data_retrieval_days": 90,
+        "transition_assistance": false,
+        "data_deletion_confirmed": true
+      }
+    },
+    {
+      "clause_id": "AWS-CL-008",
+      "category": "subcontracting",
+      "title": "Sub-processors",
+      "text": "AWS may engage sub-processors to assist in providing the Services. A current list of sub-processors is maintained at https://aws.amazon.com/compliance/sub-processors/. AWS will notify the Customer of new sub-processors by updating this list. The Customer does not have the right to object to individual sub-processor changes.",
+      "dora_relevance": "Art. 30(3)",
+      "subcontracting_provisions": {
+        "prior_approval_required": false,
+        "notification_mechanism": "website update",
+        "right_to_object": false
+      }
+    }
+  ]
+}

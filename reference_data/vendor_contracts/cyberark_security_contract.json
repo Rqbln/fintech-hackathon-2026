@@ -1,0 +1,95 @@
+{
+  "contract_ref": "CTR-CYB-2023-001",
+  "vendor": "CyberArk Software Ltd.",
+  "vendor_id": "VND-005",
+  "document_type": "saas_subscription_agreement",
+  "extracted_clauses": [
+    {
+      "clause_id": "CYB-CL-001",
+      "category": "service_description",
+      "title": "CyberArk Identity Security Platform",
+      "text": "CyberArk provides the Identity Security Platform including Privileged Access Manager (PAM), Endpoint Privilege Manager (EPM), Secrets Manager, and Identity Security Intelligence. The platform controls and monitors access to all critical banking infrastructure, databases, and applications.",
+      "dora_relevance": "Art. 30(2)(a)"
+    },
+    {
+      "clause_id": "CYB-CL-002",
+      "category": "data_residency",
+      "title": "Data Processing Location",
+      "text": "CyberArk SaaS platform for EU customers is hosted on AWS eu-central-1 (Frankfurt). Audit logs, session recordings, and credential vault data are stored exclusively in the EU region. Disaster recovery is provided via AWS eu-west-1 (Ireland). No data is transferred outside the EEA without explicit customer consent.",
+      "dora_relevance": "Art. 30(2)(b)"
+    },
+    {
+      "clause_id": "CYB-CL-003",
+      "category": "data_protection",
+      "title": "Security Controls",
+      "text": "CyberArk encrypts all vault data using AES-256 with customer-managed encryption keys (BYOK). All communications use TLS 1.3. The platform implements zero-trust architecture with continuous verification. CyberArk undergoes annual penetration testing by independent third parties.",
+      "dora_relevance": "Art. 30(2)(c)"
+    },
+    {
+      "clause_id": "CYB-CL-004",
+      "category": "rto_rpo",
+      "title": "Availability and Recovery",
+      "text": "CyberArk SaaS platform targets 99.95% availability measured monthly. Recovery Time Objective is 2 hours. Recovery Point Objective is 15 minutes via continuous replication. In the event of a regional AWS outage, failover to the DR region is automatic. Privileged session manager operates in degraded mode (cached credentials) during platform outages.",
+      "dora_relevance": "Art. 30(2)(d)",
+      "sla_values": {
+        "availability": "99.95%",
+        "rto_hours": 2,
+        "rpo_hours": 0.25,
+        "failover": "automatic to DR region"
+      }
+    },
+    {
+      "clause_id": "CYB-CL-005",
+      "category": "incident_reporting",
+      "title": "Security Incident Response",
+      "text": "CyberArk will notify affected customers of confirmed security incidents within 2 hours of classification. CyberArk's Security Incident Response Team (SIRT) provides real-time updates via the CyberArk Trust Center. Root cause analysis and remediation reports are delivered within 5 business days.",
+      "dora_relevance": "Art. 30(2)(e)",
+      "sla_values": {
+        "notification_timeframe": "2 hours",
+        "root_cause_analysis": "5 business days"
+      }
+    },
+    {
+      "clause_id": "CYB-CL-006",
+      "category": "audit_rights",
+      "title": "Audit and Transparency",
+      "text": "CyberArk provides SOC 2 Type II, ISO 27001, and Common Criteria EAL2+ certifications. On-site audits of CyberArk's development and operations facilities are permitted once per year with 45 days' advance notice. CyberArk participates in the CAIQ (Consensus Assessments Initiative Questionnaire) and publishes results on the CSA STAR registry.",
+      "dora_relevance": "Art. 30(2)(f)",
+      "audit_provisions": {
+        "onsite_audit_allowed": true,
+        "audit_frequency": "annual",
+        "notice_period_days": 45,
+        "third_party_audit": true,
+        "compliance_reports_available": ["SOC 2 Type II", "ISO 27001", "Common Criteria EAL2+"]
+      }
+    },
+    {
+      "clause_id": "CYB-CL-007",
+      "category": "exit_strategy",
+      "title": "Termination and Data Return",
+      "text": "Either party may terminate with 6 months' written notice at the end of the subscription term. Upon termination, CyberArk will export all customer configuration data, audit logs, and credential vault contents in encrypted format within 30 days. CyberArk provides a 3-month transition assistance period included in the contract. All customer data is permanently deleted within 60 days of contract end.",
+      "dora_relevance": "Art. 30(2)(g)",
+      "exit_provisions": {
+        "notice_period_months": 6,
+        "data_retrieval_days": 30,
+        "transition_assistance": true,
+        "transition_assistance_months": 3,
+        "transition_assistance_cost": "included",
+        "data_portability": "encrypted export of all vault data and audit logs"
+      }
+    },
+    {
+      "clause_id": "CYB-CL-008",
+      "category": "subcontracting",
+      "title": "Sub-processors",
+      "text": "CyberArk uses Amazon Web Services (Frankfurt region) as its primary cloud infrastructure provider. CyberArk maintains a list of sub-processors at https://www.cyberark.com/sub-processors/. Material changes to sub-processors are notified 30 days in advance. Customers may object to new sub-processors; CyberArk will make commercially reasonable efforts to provide an alternative.",
+      "dora_relevance": "Art. 30(3)",
+      "subcontracting_provisions": {
+        "prior_approval_required": false,
+        "notification_mechanism": "30 days advance notice",
+        "right_to_object": true,
+        "objection_resolution": "commercially reasonable alternative"
+      }
+    }
+  ]
+}

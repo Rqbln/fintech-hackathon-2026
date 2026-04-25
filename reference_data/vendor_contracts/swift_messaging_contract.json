@@ -1,0 +1,92 @@
+{
+  "contract_ref": "CTR-SWF-2022-001",
+  "vendor": "S.W.I.F.T. SCRL",
+  "vendor_id": "VND-003",
+  "document_type": "swift_membership_agreement",
+  "extracted_clauses": [
+    {
+      "clause_id": "SWF-CL-001",
+      "category": "service_description",
+      "title": "SWIFT Services",
+      "text": "SWIFT provides secure financial messaging services via SWIFTNet, including FIN (MT messages for securities and payments), FileAct (bulk file transfers), and InterAct (XML-based messaging). SWIFT also provides sanctions screening (Compliance Analytics) and KYC Registry services.",
+      "dora_relevance": "Art. 30(2)(a)"
+    },
+    {
+      "clause_id": "SWF-CL-002",
+      "category": "data_residency",
+      "title": "Data Centers and Messaging Zones",
+      "text": "SWIFT operates three operating centers: OPC (Netherlands), OPC (US - Virginia), and a disaster recovery site. European messages are processed through the European messaging zone and stored in the Dutch operating center. Messages may transit through the US operating center for routing purposes. SWIFT complies with EU data protection regulations.",
+      "dora_relevance": "Art. 30(2)(b)"
+    },
+    {
+      "clause_id": "SWF-CL-003",
+      "category": "data_protection",
+      "title": "Security Programme",
+      "text": "SWIFT operates under the SWIFT Customer Security Programme (CSP). All messages are encrypted end-to-end using SWIFT's proprietary PKI infrastructure. SWIFT mandates that all connected members comply with mandatory security controls (CSCF v2025). Multi-factor authentication and hardware security modules (HSMs) are required.",
+      "dora_relevance": "Art. 30(2)(c)"
+    },
+    {
+      "clause_id": "SWF-CL-004",
+      "category": "rto_rpo",
+      "title": "Service Availability and Continuity",
+      "text": "SWIFT targets 99.999% availability for FIN messaging services. Recovery Time Objective for critical messaging services is 30 minutes with automatic failover between operating centers. Recovery Point Objective is zero (no message loss) due to synchronous replication between OPCs.",
+      "dora_relevance": "Art. 30(2)(d)",
+      "sla_values": {
+        "availability": "99.999%",
+        "rto_hours": 0.5,
+        "rpo_hours": 0,
+        "failover": "automatic between OPCs"
+      }
+    },
+    {
+      "clause_id": "SWF-CL-005",
+      "category": "incident_reporting",
+      "title": "Incident Communication",
+      "text": "SWIFT notifies members of service disruptions via the SWIFTNet Service Status page and direct notifications within 15 minutes of detection. Major incident reports are published within 48 hours. SWIFT participates in coordinated disclosure with national supervisory authorities.",
+      "dora_relevance": "Art. 30(2)(e)",
+      "sla_values": {
+        "notification_timeframe": "15 minutes",
+        "root_cause_analysis": "48 hours"
+      }
+    },
+    {
+      "clause_id": "SWF-CL-006",
+      "category": "audit_rights",
+      "title": "Oversight and Audit",
+      "text": "SWIFT is overseen by the G10 central banks led by the National Bank of Belgium. SWIFT provides ISAE 3402 Type II assurance reports annually. Members may participate in pooled audit exercises organized by the SWIFT User Group. Individual on-site audits are permitted for members processing more than 1 million messages annually.",
+      "dora_relevance": "Art. 30(2)(f)",
+      "audit_provisions": {
+        "onsite_audit_allowed": true,
+        "condition": "members processing >1M messages/year",
+        "third_party_audit": true,
+        "compliance_reports_available": ["ISAE 3402 Type II", "ISO 27001", "ISO 22301"]
+      }
+    },
+    {
+      "clause_id": "SWF-CL-007",
+      "category": "exit_strategy",
+      "title": "Withdrawal from SWIFT",
+      "text": "Members may withdraw from SWIFT with 12 months' notice. Upon withdrawal, SWIFT will retain message archives for the regulatory retention period (5 years minimum). SWIFT provides message export in standard SWIFT MT/MX formats. Transition assistance is provided by SWIFT's Implementation team at standard rates.",
+      "dora_relevance": "Art. 30(2)(g)",
+      "exit_provisions": {
+        "notice_period_months": 12,
+        "data_retrieval_days": 365,
+        "transition_assistance": true,
+        "transition_assistance_cost": "standard rates",
+        "data_portability": "MT/MX formats"
+      }
+    },
+    {
+      "clause_id": "SWF-CL-008",
+      "category": "subcontracting",
+      "title": "Third-Party Dependencies",
+      "text": "SWIFT does not subcontract core messaging processing or storage. SWIFT uses dedicated infrastructure for all critical services. Network connectivity relies on certified SWIFT Service Bureaus and network partners, which are subject to SWIFT's CSCF security requirements.",
+      "dora_relevance": "Art. 30(3)",
+      "subcontracting_provisions": {
+        "prior_approval_required": false,
+        "no_subcontracting_of_core": true,
+        "notification_mechanism": "N/A - no subcontracting"
+      }
+    }
+  ]
+}

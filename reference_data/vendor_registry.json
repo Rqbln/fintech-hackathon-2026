@@ -1,0 +1,168 @@
+[
+  {
+    "roi_model": "B_03.01",
+    "vendor_id": "VND-001",
+    "legal_name": "Amazon Web Services EMEA SARL",
+    "lei_code": "549300EXAMPLE000AWSE",
+    "country": "LU",
+    "headquarters": "Luxembourg",
+    "is_intragroup": false,
+    "is_critical_provider": true,
+    "services": [
+      {
+        "roi_model": "B_03.02",
+        "service_id": "SVC-001",
+        "service_type": "Cloud Infrastructure (IaaS/PaaS)",
+        "description": "EC2 compute, S3 storage, RDS databases, VPC networking, CloudWatch monitoring. Hosts production workloads for risk calculations and data lake.",
+        "delivery_model": "public_cloud",
+        "data_location": "eu-west-1 (Ireland), eu-central-1 (Frankfurt)",
+        "supported_functions": ["FN-002", "FN-003", "FN-005", "FN-006"]
+      }
+    ],
+    "contract_ref": "CTR-AWS-2023-001",
+    "contract_start": "2023-03-01",
+    "contract_end": "2026-02-28",
+    "annual_cost_eur": 1850000,
+    "certifications": ["ISO 27001", "ISO 27017", "ISO 27018", "SOC 1 Type II", "SOC 2 Type II", "C5 (BSI)"],
+    "subcontractors": []
+  },
+  {
+    "roi_model": "B_03.01",
+    "vendor_id": "VND-002",
+    "legal_name": "Bloomberg Finance L.P.",
+    "lei_code": "549300EXAMPLE000BFLP",
+    "country": "US",
+    "headquarters": "New York",
+    "is_intragroup": false,
+    "is_critical_provider": true,
+    "services": [
+      {
+        "roi_model": "B_03.02",
+        "service_id": "SVC-002",
+        "service_type": "Market Data & Analytics",
+        "description": "Real-time and historical market data feeds, Bloomberg Terminal access, PORT risk analytics, ESG data scoring.",
+        "delivery_model": "dedicated_infrastructure",
+        "data_location": "US (primary), UK (backup)",
+        "supported_functions": ["FN-001", "FN-002", "FN-005"]
+      }
+    ],
+    "contract_ref": "CTR-BBG-2024-001",
+    "contract_start": "2024-01-15",
+    "contract_end": "2026-12-31",
+    "annual_cost_eur": 2400000,
+    "certifications": ["SOC 2 Type II", "ISO 27001"],
+    "subcontractors": [
+      {
+        "roi_model": "B_04.01",
+        "name": "Equinix Inc.",
+        "lei_code": "549300EXAMPLE000EQNX",
+        "service_provided": "Data center colocation for Bloomberg network appliances",
+        "data_location": "UK (London), US (New Jersey)"
+      }
+    ]
+  },
+  {
+    "roi_model": "B_03.01",
+    "vendor_id": "VND-003",
+    "legal_name": "S.W.I.F.T. SCRL",
+    "lei_code": "549300EXAMPLE000SWFT",
+    "country": "BE",
+    "headquarters": "La Hulpe, Belgium",
+    "is_intragroup": false,
+    "is_critical_provider": true,
+    "services": [
+      {
+        "roi_model": "B_03.02",
+        "service_id": "SVC-003",
+        "service_type": "Financial Messaging & Settlement",
+        "description": "SWIFT FIN messaging for securities settlement (MT54x), payment instructions (MT103/202), corporate actions. SWIFTNet connectivity.",
+        "delivery_model": "network_service",
+        "data_location": "EU (Belgium, Netherlands), US (Virginia - backup)",
+        "supported_functions": ["FN-001", "FN-004"]
+      }
+    ],
+    "contract_ref": "CTR-SWF-2022-001",
+    "contract_start": "2022-06-01",
+    "contract_end": "2027-05-31",
+    "annual_cost_eur": 420000,
+    "certifications": ["ISO 27001", "ISO 22301", "ISAE 3402 Type II"],
+    "subcontractors": []
+  },
+  {
+    "roi_model": "B_03.01",
+    "vendor_id": "VND-004",
+    "legal_name": "BlackRock Financial Management, Inc.",
+    "lei_code": "549300EXAMPLE000BKFM",
+    "country": "US",
+    "headquarters": "New York",
+    "is_intragroup": false,
+    "is_critical_provider": true,
+    "services": [
+      {
+        "roi_model": "B_03.02",
+        "service_id": "SVC-004",
+        "service_type": "Investment Management Platform (Aladdin)",
+        "description": "End-to-end investment management: portfolio construction, order management, risk analytics (Monte Carlo VaR), compliance monitoring, Aladdin Copilot GenAI assistant.",
+        "delivery_model": "saas",
+        "data_location": "US (primary), UK (DR site)",
+        "supported_functions": ["FN-001", "FN-002", "FN-004"]
+      }
+    ],
+    "contract_ref": "CTR-BLK-2024-001",
+    "contract_start": "2024-07-01",
+    "contract_end": "2029-06-30",
+    "annual_cost_eur": 3200000,
+    "certifications": ["SOC 1 Type II", "SOC 2 Type II", "ISO 27001"],
+    "subcontractors": [
+      {
+        "roi_model": "B_04.01",
+        "name": "Microsoft Azure (Microsoft Corporation)",
+        "lei_code": "549300EXAMPLE000MSFT",
+        "service_provided": "Cloud hosting for Aladdin platform infrastructure",
+        "data_location": "US East, UK South"
+      },
+      {
+        "roi_model": "B_04.01",
+        "name": "Snowflake Inc.",
+        "lei_code": "549300EXAMPLE000SNFL",
+        "service_provided": "Data warehousing for Aladdin analytics",
+        "data_location": "US East"
+      }
+    ]
+  },
+  {
+    "roi_model": "B_03.01",
+    "vendor_id": "VND-005",
+    "legal_name": "CyberArk Software Ltd.",
+    "lei_code": "549300EXAMPLE000CYBK",
+    "country": "IL",
+    "headquarters": "Petah Tikva, Israel",
+    "is_intragroup": false,
+    "is_critical_provider": true,
+    "services": [
+      {
+        "roi_model": "B_03.02",
+        "service_id": "SVC-005",
+        "service_type": "Identity Security & Privileged Access Management",
+        "description": "Privileged Access Manager (PAM), Endpoint Privilege Manager, Identity Security Intelligence. Controls access to all critical banking systems.",
+        "delivery_model": "saas",
+        "data_location": "EU (Frankfurt), US (Virginia - DR)",
+        "supported_functions": ["FN-003", "FN-006"]
+      }
+    ],
+    "contract_ref": "CTR-CYB-2023-001",
+    "contract_start": "2023-09-01",
+    "contract_end": "2026-08-31",
+    "annual_cost_eur": 380000,
+    "certifications": ["ISO 27001", "SOC 2 Type II", "Common Criteria EAL2+"],
+    "subcontractors": [
+      {
+        "roi_model": "B_04.01",
+        "name": "Amazon Web Services, Inc.",
+        "lei_code": "549300EXAMPLE000AWSI",
+        "service_provided": "Cloud hosting for CyberArk SaaS platform",
+        "data_location": "EU (Frankfurt)"
+      }
+    ]
+  }
+]

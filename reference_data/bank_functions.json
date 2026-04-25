@@ -1,0 +1,74 @@
+[
+  {
+    "roi_model": "B_05.01",
+    "function_id": "FN-001",
+    "name": "Portfolio Management & Order Execution",
+    "description": "Management of discretionary and advisory investment portfolios, including order routing and execution via trading platforms.",
+    "is_critical": true,
+    "licensing_authority": "AMF",
+    "rto_hours": 4,
+    "rpo_hours": 1,
+    "impact_of_disruption": "Inability to execute trades, potential market losses, breach of fiduciary duty to clients.",
+    "dependent_ict_services": ["Aladdin Platform", "Bloomberg Terminal", "SWIFT Messaging"]
+  },
+  {
+    "roi_model": "B_05.01",
+    "function_id": "FN-002",
+    "name": "Risk Measurement & Reporting",
+    "description": "Daily calculation of VaR, stress tests, liquidity risk, counterparty risk. Regulatory reporting to AMF and ESMA.",
+    "is_critical": true,
+    "licensing_authority": "AMF",
+    "rto_hours": 8,
+    "rpo_hours": 4,
+    "impact_of_disruption": "Inability to monitor portfolio risk, potential regulatory breach, delayed supervisory reports.",
+    "dependent_ict_services": ["Aladdin Platform", "AWS Cloud Infrastructure", "Bloomberg Data"]
+  },
+  {
+    "roi_model": "B_05.01",
+    "function_id": "FN-003",
+    "name": "Client Onboarding & KYC/AML",
+    "description": "Client identification, verification, anti-money laundering screening, sanctions list checking, PEP identification.",
+    "is_critical": true,
+    "licensing_authority": "AMF",
+    "rto_hours": 24,
+    "rpo_hours": 8,
+    "impact_of_disruption": "Cannot onboard new clients, potential AML violations, regulatory sanctions.",
+    "dependent_ict_services": ["CyberArk Identity Security", "AWS Cloud Infrastructure"]
+  },
+  {
+    "roi_model": "B_05.01",
+    "function_id": "FN-004",
+    "name": "Fund Accounting & NAV Calculation",
+    "description": "Daily net asset value calculation for all UCITS and AIF funds, reconciliation with custodian and transfer agent.",
+    "is_critical": true,
+    "licensing_authority": "AMF",
+    "rto_hours": 4,
+    "rpo_hours": 0,
+    "impact_of_disruption": "Incorrect fund pricing, investor losses, suspension of fund subscriptions/redemptions.",
+    "dependent_ict_services": ["Aladdin Platform", "SWIFT Messaging"]
+  },
+  {
+    "roi_model": "B_05.01",
+    "function_id": "FN-005",
+    "name": "ESG Data Integration & Reporting",
+    "description": "Integration of ESG ratings, carbon footprint data, SFDR Article 8/9 compliance monitoring, PAI calculations.",
+    "is_critical": false,
+    "licensing_authority": "AMF",
+    "rto_hours": 48,
+    "rpo_hours": 24,
+    "impact_of_disruption": "Delayed sustainability reports, potential SFDR non-compliance, reputational risk.",
+    "dependent_ict_services": ["Bloomberg Data", "AWS Cloud Infrastructure"]
+  },
+  {
+    "roi_model": "B_05.01",
+    "function_id": "FN-006",
+    "name": "Cybersecurity & Access Management",
+    "description": "Identity and access management, privileged access control, security monitoring, incident response.",
+    "is_critical": true,
+    "licensing_authority": "AMF",
+    "rto_hours": 1,
+    "rpo_hours": 0,
+    "impact_of_disruption": "Complete security breach exposure, unauthorized system access, data exfiltration.",
+    "dependent_ict_services": ["CyberArk Identity Security", "AWS Cloud Infrastructure"]
+  }
+]
