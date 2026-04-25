@@ -298,30 +298,55 @@ async function uploadContract() {
   setLoading('upload-btn', true);
   const form = new FormData();
   form.append('file', file);
-  if (contractId) form.append('contract_id', contractId);
 
   let url = '/api/ingest';
   if (contractId) url += `?contract_id=${encodeURIComponent(contractId)}`;
 
   const { ok, data } = await apiFetch(url, { method: 'POST', body: form });
-  setLoading('upload-btn', false);
-
   const el = document.getElementById('upload-result');
   el.style.display = 'block';
-  el.textContent = JSON.stringify(data, null, 2);
 
-  if (ok) {
-    state.contractId = data.contract_id;
-    state.vendor = data.vendor_name;
-    state.score = data.criticality_score;
-    updateStateDisplay();
-    // Pre-fill gap analysis form
-    document.getElementById('ga-contract-ids').value = data.contract_id;
-    document.getElementById('ga-vendor').value = data.vendor_name || '';
-    toast(`Ingested: ${data.vendor_name} (score ${data.criticality_score?.toFixed(3)}) ✓`);
-  } else {
+  if (!ok) {
+    setLoading('upload-btn', false);
+    el.textContent = JSON.stringify(data, null, 2);
     toast('Ingest failed', 'error');
+    return;
   }
+
+  // Pipeline is async — poll until done
+  const jobId = data.job_id;
+  state.contractId = data.contract_id;
+  updateStateDisplay();
+  el.textContent = `Job ${jobId} queued — polling…`;
+  toast(`Job ${jobId} started, pipeline running in background`);
+
+  await pollJob(jobId, el);
+  setLoading('upload-btn', false);
+}
+
+async function pollJob(jobId, el) {
+  for (let i = 0; i < 120; i++) {  // max 4 min (2s × 120)
+    await new Promise(r => setTimeout(r, 2000));
+    const { ok, data } = await apiFetch(`/api/jobs/${jobId}`);
+    if (!ok) { el.textContent = 'Failed to poll job'; return; }
+    el.textContent = JSON.stringify(data, null, 2);
+
+    if (data.status === 'done') {
+      const r = data.result;
+      state.vendor = r.vendor_name;
+      state.score = r.criticality_score;
+      updateStateDisplay();
+      document.getElementById('ga-contract-ids').value = r.contract_id;
+      document.getElementById('ga-vendor').value = r.vendor_name || '';
+      toast(`✓ Ingested: ${r.vendor_name} (score ${r.criticality_score?.toFixed(3)})`);
+      return;
+    }
+    if (data.status === 'error') {
+      toast(`Pipeline error: ${data.error?.slice(0, 80)}`, 'error');
+      return;
+    }
+  }
+  toast('Job timed out after 4 min', 'error');
 }
 
 async function loadConcentration() {

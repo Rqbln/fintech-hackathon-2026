@@ -1,12 +1,16 @@
 import hashlib
+import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+import structlog
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile
 
+from app import jobs
 from app.agents import ContractIngestionWorkflow
 from app.deps import get_embed_model, get_ingestion_workflow, get_settings, get_vector_store
 from app.rag.ingestion_pipeline import ingest_pdf
 
+log = structlog.get_logger()
 router = APIRouter()
 
 _DORA_PDF_PATH = Path(__file__).parent.parent.parent / "tests" / "fixtures" / "dora_regulation.pdf"
@@ -39,14 +43,31 @@ async def ingest_dora(
         embed_model=embed_model,
         llama_parse_api_key=settings.llama_parse_api_key,
     )
-
     _DORA_INGESTED_FLAG.touch()
     return {"status": "ingested", "document_id": _DORA_DOC_ID, "nodes": len(node_ids)}
 
 
-@router.post("/ingest", summary="Ingest a vendor contract PDF — triggers full AI pipeline")
+async def _run_pipeline(job_id: str, file_bytes: bytes, doc_id: str, workflow: ContractIngestionWorkflow) -> None:
+    try:
+        result = await workflow.run(file_bytes=file_bytes, contract_id=doc_id)
+        jobs.complete(job_id, {
+            "status": "ingested",
+            "contract_id": result.contract_id,
+            "vendor_name": result.vendor_name,
+            "vendor_id": result.vendor_id,
+            "criticality_score": result.criticality_score,
+            "node_ids_count": len(result.node_ids),
+        })
+        log.info("job_complete", job_id=job_id, vendor=result.vendor_name)
+    except Exception as exc:
+        jobs.fail(job_id, str(exc)[:500])
+        log.error("job_failed", job_id=job_id, error=str(exc)[:200])
+
+
+@router.post("/ingest", summary="Ingest a vendor contract PDF — returns job_id immediately")
 async def ingest_contract(
     file: UploadFile,
+    background_tasks: BackgroundTasks,
     contract_id: str | None = None,
     workflow: ContractIngestionWorkflow = Depends(get_ingestion_workflow),
 ):
@@ -55,24 +76,23 @@ async def ingest_contract(
 
     file_bytes = await file.read()
     doc_id = contract_id or hashlib.md5(file_bytes).hexdigest()[:12]
+    job_id = uuid.uuid4().hex[:8]
 
-    try:
-        result = await workflow.run(file_bytes=file_bytes, contract_id=doc_id)
-    except Exception as exc:
-        msg = str(exc)
-        # Surface rate-limit errors as 503 so the client can retry
-        is_rate_limit = "429" in msg or "queue_exceeded" in msg or "too_many_requests" in msg.lower()
-        status = 503 if is_rate_limit else 500
-        raise HTTPException(
-            status_code=status,
-            detail={"error": "pipeline_failed", "message": msg[:400]},
-        ) from exc
+    jobs.create(job_id, doc_id)
+    background_tasks.add_task(_run_pipeline, job_id, file_bytes, doc_id, workflow)
 
-    return {
-        "status": "ingested",
-        "contract_id": result.contract_id,
-        "vendor_name": result.vendor_name,
-        "vendor_id": result.vendor_id,
-        "criticality_score": result.criticality_score,
-        "node_ids_count": len(result.node_ids),
-    }
+    log.info("job_queued", job_id=job_id, contract_id=doc_id)
+    return {"job_id": job_id, "status": "running", "contract_id": doc_id}
+
+
+@router.get("/jobs/{job_id}", summary="Poll ingest pipeline job status")
+async def get_job(job_id: str):
+    entry = jobs.get(job_id)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return entry
+
+
+@router.get("/jobs", summary="List all ingest jobs")
+async def list_jobs():
+    return jobs.list_all()
