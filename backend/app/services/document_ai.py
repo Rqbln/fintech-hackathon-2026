@@ -1,3 +1,5 @@
+import functools
+
 from google.cloud import documentai_v1 as documentai
 
 from app.config import GCP_PROJECT, DOCAI_LOCATION, DOCAI_PROCESSOR_ID
@@ -10,6 +12,7 @@ def _processor_name() -> str:
     )
 
 
+@functools.lru_cache(maxsize=None)
 def _client() -> documentai.DocumentProcessorServiceClient:
     return documentai.DocumentProcessorServiceClient(
         client_options={"api_endpoint": f"{DOCAI_LOCATION}-documentai.googleapis.com"}
