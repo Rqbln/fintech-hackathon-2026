@@ -7,10 +7,14 @@ from vertexai import rag
 from app.config import GCP_PROJECT, RAG_REGION
 
 _CORPUS_DISPLAY_NAME = "regagent-corpus-v1"
+_initialized = False
 
 
 def _init() -> None:
-    vertexai.init(project=GCP_PROJECT, location=RAG_REGION)
+    global _initialized
+    if not _initialized:
+        vertexai.init(project=GCP_PROJECT, location=RAG_REGION)
+        _initialized = True
 
 
 def get_or_create_corpus() -> str:
@@ -62,6 +66,6 @@ def query_corpus(corpus_name: str, query: str, top_k: int = 10) -> list[dict]:
         similarity_top_k=top_k,
     )
     return [
-        {"text": ctx.text, "source": ctx.source_uri, "score": ctx.score}
+        {"text": ctx.text, "source": getattr(ctx, "source_uri", None), "score": ctx.score}
         for ctx in response.contexts.contexts
     ]

@@ -68,4 +68,5 @@ def test_query_corpus_returns_list_of_dicts(mock_vertexai, mock_rag):
 
     assert len(results) == 1
     assert results[0]["text"] == "RTO shall not exceed 4 hours."
+    assert results[0]["source"] == "gs://bucket/file.txt"
     assert results[0]["score"] == 0.92
