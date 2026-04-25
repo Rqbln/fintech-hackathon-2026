@@ -64,12 +64,11 @@ class ExtractorAgent:
         )
 
     def _format_for_rag(self, vendor_name: str, doc_id: str, chunks: list[dict]) -> str:
-        header = f"VENDOR CONTRACT: {vendor_name}\nDOCUMENT_ID: {doc_id}\n\n"
         parts = [
-            f"[PAGE {c['page']} | CATEGORY: {c['category']}]\n{c['text']}"
+            f"[{vendor_name} | {c['category']}]\n{c['text']}"
             for c in chunks
         ]
-        return header + "\n---\n".join(parts)
+        return "\n\n".join(parts)
 
     def _extract_sla(self, tables: list[dict]) -> list[SLAEntry]:
         entries = []

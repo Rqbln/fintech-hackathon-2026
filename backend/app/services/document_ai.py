@@ -24,8 +24,8 @@ def _client() -> documentai.DocumentProcessorServiceClient:
 
 def extract_from_bytes(content: bytes) -> dict:
     """
-    Synchronous Document AI OCR. Splits PDFs > 30 pages into 30-page chunks
-    and merges results, preserving correct page numbers across chunks.
+    Synchronous Document AI OCR. Splits PDFs > 15 pages into chunks
+    (non-imageless processor limit) and merges results with correct page numbers.
     """
     chunks = _split_pdf(content)
     if len(chunks) == 1:
