@@ -6,6 +6,7 @@ from fastapi import APIRouter, Body, Depends, Request
 from app.agents.gap_analysis import run_gap_analysis
 from app.agents.remediation import run_remediation
 from app.agents.report_assembler import assemble_report
+from app import sessions
 from app.api.report import store_report
 from app.deps import get_citation_engine, get_llm
 from app.schemas import ReportArtifact
@@ -48,4 +49,5 @@ async def gap_analysis(
     )
 
     store_report(report)
+    sessions.record(report)
     return report

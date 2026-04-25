@@ -85,6 +85,8 @@
   <button onclick="showTab('graph')">Graph</button>
   <button onclick="showTab('analysis')">Gap Analysis</button>
   <button onclick="showTab('report')">Report</button>
+  <button onclick="showTab('sessions')">Sessions</button>
+  <button onclick="showTab('jobs')">Jobs</button>
 </nav>
 
 <!-- ── STATUS ─────────────────────────────────────────────────────────────── -->
@@ -216,6 +218,28 @@
       <h2 id="report-title">Report</h2>
       <div id="report-content"></div>
     </div>
+  </div>
+</div>
+
+<!-- ── SESSIONS ──────────────────────────────────────────────────────────── -->
+<div id="tab-sessions" class="tab">
+  <div class="card">
+    <h2>Gap Analysis Sessions</h2>
+    <div class="flex-end" style="margin-bottom:12px;">
+      <button class="btn secondary" onclick="loadSessions()">Refresh</button>
+    </div>
+    <div id="sessions-table"><p style="color:#64748b;font-size:13px;">No sessions yet — run a gap analysis first.</p></div>
+  </div>
+</div>
+
+<!-- ── JOBS ──────────────────────────────────────────────────────────────── -->
+<div id="tab-jobs" class="tab">
+  <div class="card">
+    <h2>Ingest Jobs</h2>
+    <div class="flex-end" style="margin-bottom:12px;">
+      <button class="btn secondary" onclick="loadJobs()">Refresh</button>
+    </div>
+    <div id="jobs-table"><p style="color:#64748b;font-size:13px;">No jobs yet — upload a contract first.</p></div>
   </div>
 </div>
 
@@ -573,6 +597,68 @@ function escapeHtml(s) {
 function copyText(sessionId) {
   const el = document.getElementById('report-content').querySelector('.markdown-output');
   navigator.clipboard.writeText(el ? el.textContent : '').then(() => toast('Copied to clipboard'));
+}
+
+// ── SESSIONS ───────────────────────────────────────────────────────────────
+async function loadSessions() {
+  const { ok, data } = await apiFetch('/api/sessions');
+  const container = document.getElementById('sessions-table');
+  if (!ok || !Array.isArray(data) || data.length === 0) {
+    container.innerHTML = '<p style="color:#64748b;font-size:13px;">No sessions yet.</p>';
+    return;
+  }
+  container.innerHTML = `<table>
+    <thead><tr><th>Session ID</th><th>Created</th><th>Contracts</th><th>Risk</th><th>Met</th><th>Partial</th><th>Unmet</th><th></th></tr></thead>
+    <tbody>
+      ${data.map(s => `
+        <tr>
+          <td style="font-size:11px;color:#60a5fa;">${s.session_id}</td>
+          <td style="font-size:11px;">${new Date(s.created_at).toLocaleString()}</td>
+          <td style="font-size:11px;">${(s.contract_ids||[]).join(', ')}</td>
+          <td><span class="badge ${s.overall_risk_level === 'low' ? 'ok' : s.overall_risk_level === 'critical' ? 'error' : 'warn'}">${s.overall_risk_level}</span></td>
+          <td style="color:#22c55e;font-weight:600;">${s.obligations_met}</td>
+          <td style="color:#f59e0b;font-weight:600;">${s.obligations_partial}</td>
+          <td style="color:#ef4444;font-weight:600;">${s.obligations_unmet}</td>
+          <td>
+            <button class="btn secondary" style="padding:4px 8px;font-size:11px;"
+              onclick="document.getElementById('report-session-id').value='${s.session_id}';showTabByName('report');loadReport('json')">
+              View
+            </button>
+          </td>
+        </tr>`).join('')}
+    </tbody></table>`;
+}
+
+// ── JOBS ────────────────────────────────────────────────────────────────────
+async function loadJobs() {
+  const { ok, data } = await apiFetch('/api/jobs');
+  const container = document.getElementById('jobs-table');
+  if (!ok || !Array.isArray(data) || data.length === 0) {
+    container.innerHTML = '<p style="color:#64748b;font-size:13px;">No jobs yet.</p>';
+    return;
+  }
+  container.innerHTML = `<table>
+    <thead><tr><th>Job ID</th><th>Contract ID</th><th>Status</th><th>Started</th><th>Finished</th><th>Vendor</th><th>Score</th></tr></thead>
+    <tbody>
+      ${data.map(j => `
+        <tr>
+          <td style="font-size:11px;font-family:monospace;">${j.job_id}</td>
+          <td style="font-size:11px;">${j.contract_id}</td>
+          <td><span class="badge ${j.status==='done'?'ok':j.status==='error'?'error':'warn'}">${j.status}</span></td>
+          <td style="font-size:11px;">${j.started_at ? new Date(j.started_at).toLocaleTimeString() : '—'}</td>
+          <td style="font-size:11px;">${j.finished_at ? new Date(j.finished_at).toLocaleTimeString() : '—'}</td>
+          <td style="font-size:11px;">${j.result?.vendor_name || (j.error ? '⚠ '+j.error.slice(0,40) : '—')}</td>
+          <td style="font-size:11px;">${j.result?.criticality_score?.toFixed(3) ?? '—'}</td>
+        </tr>`).join('')}
+    </tbody></table>`;
+}
+
+function showTabByName(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  const btn = [...document.querySelectorAll('nav button')].find(b => b.textContent.toLowerCase().includes(name));
+  if (btn) btn.classList.add('active');
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────
