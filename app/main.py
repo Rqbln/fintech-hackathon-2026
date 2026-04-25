@@ -9,6 +9,7 @@ from llama_index.core import VectorStoreIndex
 from neo4j import AsyncGraphDatabase
 
 from .config import settings
+from .graph.schema import apply_schema
 from .llm.client import make_llm
 from .llm.embeddings import make_embed_model
 from .rag.citation_query import make_citation_engine
@@ -30,6 +31,7 @@ async def lifespan(app: FastAPI):
         settings.neo4j_uri,
         auth=(settings.neo4j_user, settings.neo4j_password),
     )
+    await apply_schema(app.state.neo4j)
     log.info("neo4j_driver_created", uri=settings.neo4j_uri)
 
     # LLM + embed model — set on LlamaIndex global Settings so all components pick them up
