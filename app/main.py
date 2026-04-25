@@ -13,7 +13,7 @@ from neo4j import AsyncGraphDatabase
 from .agents import ContractIngestionWorkflow
 from .config import settings
 from .graph.schema import apply_schema
-from .llm.client import make_llm
+from .llm.client import make_extraction_llm, make_llm
 from .llm.embeddings import make_embed_model
 from .rag.citation_query import make_citation_engine
 from .rag.store import get_or_create_vector_store
@@ -39,12 +39,14 @@ async def lifespan(app: FastAPI):
 
     # LLM + embed model — set on LlamaIndex global Settings so all components pick them up
     llm = make_llm(settings)
+    extraction_llm = make_extraction_llm(settings)
     embed_model = make_embed_model(settings)
     LlamaSettings.llm = llm
     LlamaSettings.embed_model = embed_model
     app.state.llm = llm
+    app.state.extraction_llm = extraction_llm
     app.state.embed_model = embed_model
-    log.info("llm_ready", model=settings.cerebras_model)
+    log.info("llm_ready", model=settings.cerebras_model, extraction_model=settings.cerebras_extraction_model)
 
     # Vertex AI Vector Store + LlamaIndex index
     vector_store = get_or_create_vector_store(settings)
@@ -57,6 +59,7 @@ async def lifespan(app: FastAPI):
     # Workflow — created once, reused per request (stateless between runs)
     app.state.ingestion_workflow = ContractIngestionWorkflow(
         llm=llm,
+        extraction_llm=extraction_llm,
         embed_model=embed_model,
         vector_store=vector_store,
         neo4j_driver=app.state.neo4j,

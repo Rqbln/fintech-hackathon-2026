@@ -68,7 +68,7 @@ def test_truncate_keeps_short_text():
 
 
 def test_truncate_clips_long_text():
-    text = "x" * 20_000
+    text = "x" * 50_000  # beyond the 40k limit
     result = _truncate(text)
-    assert len(result) < 13_000
+    assert len(result) < 42_000
     assert result.endswith("[... truncated ...]")
