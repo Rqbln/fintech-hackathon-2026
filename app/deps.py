@@ -33,3 +33,7 @@ def get_embed_model(request: Request):
 
 def get_llm(request: Request):
     return request.app.state.llm
+
+
+def get_ingestion_workflow(request: Request):
+    return request.app.state.ingestion_workflow

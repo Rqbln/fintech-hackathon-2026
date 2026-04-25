@@ -8,6 +8,7 @@ from llama_index.core import Settings as LlamaSettings
 from llama_index.core import VectorStoreIndex
 from neo4j import AsyncGraphDatabase
 
+from .agents import ContractIngestionWorkflow
 from .config import settings
 from .graph.schema import apply_schema
 from .llm.client import make_llm
@@ -50,6 +51,16 @@ async def lifespan(app: FastAPI):
     app.state.index = index
     app.state.citation_engine = make_citation_engine(index)
     log.info("vector_store_ready", collection=settings.vertex_ai_vs_collection)
+
+    # Workflow — created once, reused per request (stateless between runs)
+    app.state.ingestion_workflow = ContractIngestionWorkflow(
+        llm=llm,
+        embed_model=embed_model,
+        vector_store=vector_store,
+        neo4j_driver=app.state.neo4j,
+        llama_parse_api_key=settings.llama_parse_api_key,
+        timeout=300,
+    )
 
     yield
 
