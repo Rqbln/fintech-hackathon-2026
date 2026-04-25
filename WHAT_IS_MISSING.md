@@ -1,8 +1,8 @@
 # RegAgent -- What Is Missing for a Functional Prototype
 
-This document is the single source of truth for everything that still needs to be built, enriched, or connected to turn the current scaffold into a working demo for the Paris Fintech Hackathon 2026 (24h sprint).
+This document tracks everything still needed to turn the current scaffold into a working demo.
 
-Status legend: `[DONE]` shipped, `[PARTIAL]` scaffold exists but logic is TODO, `[MISSING]` does not exist yet.
+Status: `[DONE]` shipped | `[PARTIAL]` scaffold exists, logic TODO | `[MISSING]` does not exist yet
 
 ---
 
@@ -11,90 +11,85 @@ Status legend: `[DONE]` shipped, `[PARTIAL]` scaffold exists but logic is TODO, 
 | Item | Status | Details |
 |------|--------|---------|
 | Project `regagent-dora-2026` | `[DONE]` | Active, billing enabled |
-| 11 APIs enabled | `[DONE]` | Document AI, Vertex AI, Cloud Run, etc. |
+| 11+ APIs enabled | `[DONE]` | Document AI, Vertex AI, Cloud Run, Artifact Registry, API Keys, etc. |
 | GCS buckets | `[DONE]` | `regagent-documents-eu` + `regagent-reference-eu` |
 | Artifact Registry | `[DONE]` | `regagent-repo` in europe-west9 |
 | Document AI OCR processor | `[DONE]` | ID `9a4312989d6fb591`, EU region |
 | Workload Identity Federation | `[DONE]` | Pool + provider + SA bindings |
-| **Vertex AI GenAI terms acceptance** | `[MISSING]` | Must manually accept at https://console.cloud.google.com/vertex-ai?project=regagent-dora-2026 -- navigate to Model Garden > Gemini and click Enable. Without this, all Gemini API calls return 404. |
-| **Vertex AI Vector Search index** | `[MISSING]` | No index has been created yet. Must create an index, create an endpoint, and deploy the index to the endpoint. This takes ~30 min. See `data_pipeline/vectorization/index_manager.py`. |
-| **Upload reference data to GCS** | `[MISSING]` | The files in `reference_data/` must be uploaded to `gs://regagent-reference-eu/` and then vectorized into the Vector Search index. |
-| **Secret Manager secrets** | `[MISSING]` | No secrets stored yet. Consider storing `DOCAI_PROCESSOR_ID` and any API keys there. |
+| Vertex AI Gemini access | `[DONE]` | Gemini 2.5 Flash works via Vertex AI (`europe-west1`) and Generative Language API |
+| Gemini API Key | `[DONE]` | `AIzaSyAMXHiamVrKqyk13nLBWkWKaLhbyR7vqPk` (restricted to `generativelanguage.googleapis.com`) |
+| **Vertex AI Vector Search index** | `[MISSING]` | Must create index, endpoint, and deploy. Takes ~30 min. See `data_pipeline/vectorization/index_manager.py`. |
+| **Upload reference data to GCS** | `[MISSING]` | Run `gsutil cp reference_data/*.json gs://regagent-reference-eu/` then vectorize. |
+| **Secret Manager secrets** | `[MISSING]` | Consider storing API keys and processor IDs. |
 
 ---
 
-## 2. Reference Data (the "brain" of the system)
+## 2. Reference Data
 
-### 2.1 What exists (scaffold-level)
+### 2.1 What exists
 
-| File | Status | Gap |
-|------|--------|-----|
-| `dora_article_30.json` | `[PARTIAL]` | Only 8 entries covering Art. 30(2)(a)-(g) and Art. 30(3). Missing the full text of sub-paragraphs, the complete Art. 28-29 (general TPRM framework), and Art. 31 (concentration risk criteria). |
-| `iso27001_controls.json` | `[PARTIAL]` | Only 7 controls (A.5.19-A.5.33). Missing A.8.x (technology controls: encryption, logging, network security) which are frequently referenced in vendor contracts. |
-| `iso27005_methodology.json` | `[PARTIAL]` | Scoring methodology defined but no actual scoring implementation in code. |
-| `roi_schema.json` | `[PARTIAL]` | Lists 15 model IDs and field names but no field-level validation rules, data types, or enum values needed for actual RoI generation. |
-| `bank_rules_sample.json` | `[PARTIAL]` | Only 8 generic rules. Missing function-specific thresholds, vendor-specific overrides, and the link to the bank entity profile. |
+| File | Status | Notes |
+|------|--------|-------|
+| `dora_article_30.json` | `[PARTIAL]` | 8 entries covering Art. 30(2)(a)-(g) and Art. 30(3). Missing full sub-paragraph text and Art. 28-29, 31. |
+| `iso27001_controls.json` | `[PARTIAL]` | 7 controls (A.5.19-A.5.33). Missing A.8.x (encryption, logging, network). |
+| `iso27005_methodology.json` | `[PARTIAL]` | Scoring methodology defined, no code implementation yet. |
+| `roi_schema.json` | `[PARTIAL]` | 15 model IDs listed, no field-level validation. |
+| `bank_rules_sample.json` | `[PARTIAL]` | 8 generic rules. Missing function-specific thresholds. |
+| `bank_entity.json` | `[DONE]` | Full Eurobank profile with LEI, AUM, branches, group structure. |
+| `bank_functions.json` | `[DONE]` | 6 critical functions with RTO/RPO targets. |
+| `vendor_registry.json` | `[DONE]` | 5 ICT vendors with LEI, services, costs, certifications. |
+| `vendor_contracts/*.json` | `[DONE]` | 5 simulated contract extracts (AWS, Bloomberg, SWIFT, Aladdin, CyberArk). |
+| `concentration_matrix.json` | `[DONE]` | Cross-vendor dependencies and concentration risks. |
 
-### 2.2 What is completely missing
+### 2.2 Still missing
 
 | Data | Priority | Description |
 |------|----------|-------------|
-| **`reference_data/bank_entity.json`** | CRITICAL | The fictitious bank's identity: name, LEI code, country, branches, group structure, competent authority, total AUM, number of employees. This is model B_01.01-B_01.03 in the RoI. |
-| **`reference_data/bank_functions.json`** | CRITICAL | Inventory of the bank's critical and important business functions (payment processing, portfolio management, custody, trade execution, risk reporting, client onboarding). Each with criticality, RTO/RPO targets, and licensing authority. This is model B_05.01. |
-| **`reference_data/vendor_registry.json`** | CRITICAL | The bank's ICT third-party service providers. At least 5-8 realistic vendors (cloud, market data, trading platform, cybersecurity, payments, messaging). Each with LEI, country, services provided, contract dates, annual cost, certifications. This is models B_03.01-B_03.03. |
-| **`reference_data/vendor_contracts/`** | CRITICAL | Simulated contract extracts (JSON) for each vendor in the registry. Each should contain: SLA clauses, data residency info, audit rights, subcontracting chains, exit provisions. This is the data the Extractor Agent would produce after parsing a real PDF. |
-| **`reference_data/dora_articles_full.json`** | HIGH | Expanded DORA coverage beyond Art. 30. Should include Art. 5-9 (ICT risk management framework), Art. 11 (response and recovery), Art. 15-16 (digital resilience testing), Art. 28 (general TPRM principles), Art. 29 (preliminary assessment). |
-| **`reference_data/concentration_matrix.json`** | HIGH | Cross-vendor dependency matrix showing shared infrastructure (e.g., vendor A and vendor B both depend on AWS eu-west-1). Essential for the concentration risk scoring. |
-| **`reference_data/sample_pdfs/`** | MEDIUM | Actual PDF files to demo the Document AI extraction pipeline. Could use the existing `docs/navigating-gdpr-compliance.pdf` or create mock vendor contracts as PDFs. |
+| `dora_articles_full.json` | HIGH | Expanded DORA coverage: Art. 5-9, 11, 15-16, 28-29. |
+| `sample_pdfs/` | MEDIUM | PDF files for Document AI demo. Can use `docs/*.pdf` as test documents. |
 
 ---
 
 ## 3. Backend Implementation
 
-### 3.1 Agents (the core logic)
+### 3.1 Agents
 
 | Agent | File | Status | What is missing |
 |-------|------|--------|-----------------|
-| **Extractor** | `backend/app/agents/extractor.py` | `[PARTIAL]` | Method stubs only. Must implement: (1) Call Document AI `process_document`, (2) Parse the returned `Document` object to extract tables, key-value pairs, and clause text, (3) Use LangChain `RecursiveCharacterTextSplitter` or custom clause-aware splitter, (4) Call Vertex AI Embeddings to vectorize chunks, (5) Store vectors in Vector Search. |
-| **Evaluator** | `backend/app/agents/evaluator.py` | `[PARTIAL]` | Method stubs only. Must implement: (1) Load DORA/ISO reference from Vector Search, (2) For each extracted clause, semantic search for matching requirements, (3) Send clause + requirement to Gemini with a structured prompt asking for compliance classification, (4) Aggregate scores using ISO 27005 methodology weights. |
-| **Orchestrator** | `backend/app/agents/orchestrator.py` | `[PARTIAL]` | Method stubs only. Must implement: (1) Load bank internal rules from `bank_rules_sample.json` (or Vector Search), (2) Compare each vendor guarantee against bank thresholds, (3) Send structured prompt to Gemini asking for gap identification, (4) Generate severity-ranked `Alert` objects, (5) Produce `RegisterEntry` for the RoI. |
+| Extractor | `extractor.py` | `[PARTIAL]` | Method stubs only. Implement: Document AI call, table parsing, clause splitting, embedding, Vector Search storage. |
+| Evaluator | `evaluator.py` | `[PARTIAL]` | Method stubs only. Implement: semantic search, Gemini classification, ISO 27005 scoring, concentration analysis. |
+| Orchestrator | `orchestrator.py` | `[PARTIAL]` | Method stubs only. Implement: gap analysis via Gemini, alert generation, RoI entry creation. |
 
 ### 3.2 Prompt Templates
 
-`[MISSING]` -- No prompt templates exist anywhere. These are critical for Gemini to produce structured, reliable output.
-
-Need to create **`backend/app/agents/prompts.py`** containing:
-
-1. **EXTRACTION_PROMPT** -- Given OCR text, extract structured clause data (category, SLA values, entities).
-2. **CLASSIFICATION_PROMPT** -- Given a clause and a DORA/ISO requirement, classify compliance as `compliant`, `partial`, or `non_compliant` with evidence.
-3. **GAP_ANALYSIS_PROMPT** -- Given bank internal rule + vendor guarantee, identify gaps and rate severity.
-4. **ROI_GENERATION_PROMPT** -- Given vendor data, generate a Register of Information entry following the RoI schema.
+| File | Status |
+|------|--------|
+| `prompts.py` | `[DONE]` | 6 prompt templates: system, extraction, classification, gap analysis, RoI generation, concentration risk. |
 
 ### 3.3 Services
 
-| Service | File | Status | What is missing |
-|---------|------|--------|-----------------|
-| `document_ai.py` | `[PARTIAL]` | Basic `process_document` works. Missing: batch processing, table extraction parsing, page-level iteration. |
-| `vertex_ai.py` | `[PARTIAL]` | Basic `generate` and `embed_texts` work. Missing: system instructions, structured JSON output mode, temperature/safety settings. |
-| `vector_search.py` | `[PARTIAL]` | Stub only. Must implement actual Vertex AI Vector Search SDK calls (`MatchingEngineIndex`, `MatchingEngineIndexEndpoint`). |
-| `storage.py` | `[PARTIAL]` | Basic upload/download. Missing: list objects, signed URL generation for frontend PDF preview. |
+| Service | Status | What is missing |
+|---------|--------|-----------------|
+| `document_ai.py` | `[PARTIAL]` | Basic `process_document` works. Missing: batch processing, table extraction. |
+| `vertex_ai.py` | `[PARTIAL]` | Basic methods. Missing: structured JSON output, system instructions, temperature settings. |
+| `vector_search.py` | `[PARTIAL]` | Stub only. Must implement Vector Search SDK calls. |
+| `storage.py` | `[PARTIAL]` | Basic upload/download. Missing: list objects, signed URLs. |
 
-### 3.4 Routers (API endpoints)
+### 3.4 Routers
 
 | Router | Status | What is missing |
 |--------|--------|-----------------|
-| `documents.py` | `[PARTIAL]` | Must wire up: read uploaded bytes, call `storage.upload_document`, call `extractor.extract`, return extraction status. |
-| `analysis.py` | `[PARTIAL]` | Must wire up: call `evaluator.evaluate`, then `orchestrator.gap_analysis`, store results, return analysis. |
-| `alerts.py` | `[PARTIAL]` | Must implement: in-memory or persistent alert storage, filtering by severity, CRO validation workflow. |
-| `register.py` | `[PARTIAL]` | Must implement: aggregate all vendor data into RoI models, export in CSV format. |
+| `documents.py` | `[PARTIAL]` | Wire up: storage upload, extractor call, status return. |
+| `analysis.py` | `[PARTIAL]` | Wire up: evaluator + orchestrator, result storage. |
+| `alerts.py` | `[PARTIAL]` | Implement: alert storage, severity filtering, CRO validation. |
+| `register.py` | `[PARTIAL]` | Implement: RoI aggregation, CSV export. |
 
 ### 3.5 Data Persistence
 
-`[MISSING]` -- No persistence layer exists. Options for the hackathon:
-
-- **Simplest**: In-memory Python dicts/lists (reset on restart, fine for a 24h demo).
-- **Better**: JSON files on Cloud Storage.
-- **Best**: Firestore or Cloud SQL (adds complexity but impresses jury).
+`[MISSING]` -- Options:
+- **Simplest**: In-memory Python dicts (reset on restart, fine for demo)
+- **Better**: JSON files on Cloud Storage
+- **Best**: Firestore
 
 ---
 
@@ -102,158 +97,97 @@ Need to create **`backend/app/agents/prompts.py`** containing:
 
 ### 4.1 Build Configuration
 
-`[MISSING]` -- The React app cannot build. Missing essential files:
-
-| File | Description |
-|------|-------------|
-| `frontend/tsconfig.json` | TypeScript configuration |
-| `frontend/tsconfig.app.json` | App-specific TS config |
-| `frontend/tsconfig.node.json` | Node-specific TS config |
-| `frontend/vite.config.ts` | Vite bundler configuration (with React plugin) |
-| `frontend/index.html` | HTML entry point with `<div id="root">` |
-| `frontend/src/main.tsx` | React entry point rendering `<App />` |
-| `frontend/src/vite-env.d.ts` | Vite type declarations |
+| File | Status |
+|------|--------|
+| `tsconfig.json` | `[DONE]` |
+| `vite.config.ts` | `[DONE]` |
+| `index.html` | `[DONE]` |
+| `src/main.tsx` | `[DONE]` |
 
 ### 4.2 UI Components
 
-All 5 components exist but contain only placeholder `<div>` elements. They need:
+All 5 components exist with placeholder content. Need real implementation:
 
 | Component | Must implement |
 |-----------|---------------|
-| `Dashboard.tsx` | Summary cards (total vendors, compliance rate, critical alerts count), recent alerts list, overall risk gauge. API calls to `GET /api/alerts` and `GET /api/register`. |
-| `ContractUpload.tsx` | Drag-and-drop PDF upload, progress bar, file validation. API call to `POST /api/documents/upload`. |
-| `GapAnalysis.tsx` | Per-vendor gap table with columns: DORA Article, Bank Requirement, Vendor Guarantee, Gap, Severity. Color-coded by severity. API call to `GET /api/analysis/results/{id}`. |
-| `RiskMap.tsx` | Vendor dependency graph (could use a simple table or a D3/recharts visualization). Shows concentration scores and shared infrastructure. |
-| `RegisterView.tsx` | Tabular view of all RoI entries with export button (CSV download). |
+| `Dashboard.tsx` | KPI cards, recent alerts list, risk gauge. API: `GET /api/alerts`, `GET /api/register`. |
+| `ContractUpload.tsx` | Drag-and-drop PDF upload, progress bar. API: `POST /api/documents/upload`. |
+| `GapAnalysis.tsx` | Per-vendor gap table with severity coloring. API: `GET /api/analysis/results/{id}`. |
+| `RiskMap.tsx` | Vendor dependency graph or table with concentration scores. |
+| `RegisterView.tsx` | Tabular RoI view with CSV export button. |
 
-### 4.3 Styling & UI Library
+### 4.3 Styling
 
-`[MISSING]` -- No CSS framework installed. Recommended for speed:
-
-- **Tailwind CSS** + **shadcn/ui** (best quality, moderate setup time)
-- **Chakra UI** (fast, good defaults)
-- **Plain CSS modules** (zero dependency, fastest to start)
+`[MISSING]` -- No CSS framework. Recommended: Tailwind CSS + shadcn/ui or Chakra UI.
 
 ---
 
 ## 5. Data Pipeline
 
-### 5.1 Ingestion pipeline
-
 | File | Status | What is missing |
 |------|--------|-----------------|
-| `extract_text.py` | `[PARTIAL]` | Stub. Must implement GCS-triggered extraction using Document AI batch API. |
-| `chunker.py` | `[PARTIAL]` | Stub. Must implement clause-aware chunking. Legal documents need splitting on article/section boundaries, not arbitrary character counts. Recommended: regex-based splitting on patterns like `Article \d+`, `Section \d+`, `\d+\.\d+`. |
-
-### 5.2 Vectorization pipeline
-
-| File | Status | What is missing |
-|------|--------|-----------------|
-| `embed.py` | `[PARTIAL]` | Stub. Must call `TextEmbeddingModel.get_embeddings()` with batching (max 250 texts per call). |
-| `index_manager.py` | `[PARTIAL]` | Stub. Must implement index creation with correct dimensions (768 for `text-multilingual-embedding-002`), distance measure (DOT_PRODUCT_DISTANCE or COSINE), and deployment to endpoint. |
-
-### 5.3 Reference data loading
-
-| File | Status | What is missing |
-|------|--------|-----------------|
-| `load_reference.py` | `[PARTIAL]` | Reads JSON files but does not vectorize or upload them. Must: (1) Load all reference JSONs, (2) Convert each entry to a text chunk, (3) Embed via Vertex AI, (4) Upsert into Vector Search index with metadata (source, article_id, category). |
+| `extract_text.py` | `[PARTIAL]` | Implement Document AI batch API call. |
+| `chunker.py` | `[PARTIAL]` | Implement clause-aware chunking (regex: `Article \d+`, `Section \d+`). |
+| `embed.py` | `[PARTIAL]` | Implement `TextEmbeddingModel.get_embeddings()` with batching. |
+| `index_manager.py` | `[PARTIAL]` | Implement index creation (768 dims, DOT_PRODUCT). |
+| `load_reference.py` | `[PARTIAL]` | Load JSONs, convert to text chunks, embed, upsert to Vector Search. |
 
 ---
 
 ## 6. CI/CD & DevOps
 
-| Item | Status | Details |
-|------|--------|---------|
-| `deploy-backend.yml` | `[DONE]` | Workflow complete with WIF auth |
-| `deploy-frontend.yml` | `[DONE]` | Workflow complete with WIF auth |
-| **`.env.example`** | `[MISSING]` | No environment variable documentation. Developers won't know what to configure. |
-| **Docker Compose (local dev)** | `[MISSING]` | No way to run backend + frontend locally together. A `docker-compose.yml` would help during development. |
-| **Frontend `package-lock.json`** | `[MISSING]` | Must run `npm install` in `frontend/` to generate lockfile before Docker build works. |
+| Item | Status |
+|------|--------|
+| `deploy-backend.yml` | `[DONE]` |
+| `deploy-frontend.yml` | `[DONE]` |
+| `.env.example` | `[DONE]` |
+| **Docker Compose** | `[MISSING]` -- Useful for local development. |
+| **`package-lock.json`** | `[MISSING]` -- Run `npm install` in `frontend/`. |
 
 ---
 
-## 7. Testing & Demo Data
+## 7. Testing & Demo
 
-| Item | Status | Details |
-|------|--------|---------|
-| **Unit tests** | `[MISSING]` | No tests exist. At minimum: test the scoring algorithm, test the DORA mapping logic, test the Pydantic schemas. |
-| **Sample PDF for demo** | `[MISSING]` | Need at least 1 realistic vendor contract PDF to demonstrate the full pipeline during the live demo. The `docs/navigating-gdpr-compliance.pdf` can serve as a first test document. |
-| **Pre-computed demo results** | `[MISSING]` | For a reliable hackathon demo, pre-compute at least one full analysis (extraction -> evaluation -> gap analysis -> alerts) and store the results so the frontend can display them even if the pipeline fails live. |
-
----
-
-## 8. Priority Execution Order (24h Hackathon)
-
-For maximum demo impact, build in this order:
-
-### Hour 0-2: Foundation
-1. Accept Vertex AI terms in GCP Console
-2. Complete frontend build config (tsconfig, vite, index.html, main.tsx)
-3. Create `.env.example`
-4. `npm install` in frontend
-
-### Hour 2-6: Data Layer
-5. Create `bank_entity.json` (fictitious bank profile)
-6. Create `bank_functions.json` (critical function inventory)
-7. Create `vendor_registry.json` (5-8 realistic vendors)
-8. Create `vendor_contracts/*.json` (simulated contract extracts for each vendor)
-9. Create `concentration_matrix.json`
-
-### Hour 6-10: Agent Prompts + Gemini Integration
-10. Write `backend/app/agents/prompts.py` (all 4 prompt templates)
-11. Implement `vertex_ai.py` with structured JSON output
-12. Implement `evaluator.py` using prompts + reference data
-13. Implement `orchestrator.py` gap analysis logic
-
-### Hour 10-14: Pipeline
-14. Implement `extractor.py` with Document AI integration
-15. Implement `vector_search.py` with Vertex AI SDK
-16. Create Vector Search index + deploy
-17. Run `load_reference.py` to populate index
-
-### Hour 14-20: Frontend
-18. Install Tailwind or Chakra UI
-19. Build `Dashboard.tsx` with real API calls
-20. Build `ContractUpload.tsx` with drag-and-drop
-21. Build `GapAnalysis.tsx` with severity table
-22. Build `RegisterView.tsx` with export
-
-### Hour 20-24: Polish & Demo Prep
-23. Pre-compute one full demo flow
-24. Test full pipeline end-to-end
-25. Deploy to Cloud Run
-26. Prepare 3-minute pitch
+| Item | Status |
+|------|--------|
+| Unit tests | `[MISSING]` -- At minimum: test scoring, DORA mapping, Pydantic schemas. |
+| Sample PDF | `[MISSING]` -- Use `docs/navigating-gdpr-compliance.pdf` as test input. |
+| Pre-computed demo | `[MISSING]` -- Pre-compute one full analysis for reliable live demo. |
 
 ---
 
-## 9. Files to Create (Complete List)
+## 8. Priority Execution Order
 
-```
-NEW FILES NEEDED:
-  reference_data/
-    bank_entity.json                    # Fictitious bank identity (B_01.01)
-    bank_functions.json                 # Critical function inventory (B_05.01)
-    vendor_registry.json                # ICT vendor registry (B_03.01)
-    vendor_contracts/
-      aws_cloud_contract.json           # Simulated AWS contract extract
-      bloomberg_data_contract.json      # Simulated Bloomberg contract
-      swift_messaging_contract.json     # Simulated SWIFT contract
-      aladdin_platform_contract.json    # Simulated Aladdin contract
-      cyberark_security_contract.json   # Simulated CyberArk contract
-    concentration_matrix.json           # Cross-vendor dependency matrix
-    dora_articles_full.json             # Expanded DORA coverage (Art. 5-31)
+### Immediate (Foundation)
+1. `npm install` in frontend
+2. Install Tailwind/Chakra UI
 
-  backend/app/agents/
-    prompts.py                          # Gemini prompt templates
+### Hour 1-4 (Core Logic)
+3. Implement `vertex_ai.py` with Gemini 2.5 Flash structured JSON
+4. Implement `evaluator.py` using prompts + reference data
+5. Implement `orchestrator.py` gap analysis logic
+6. Implement basic in-memory persistence
 
-  frontend/
-    tsconfig.json
-    tsconfig.app.json
-    tsconfig.node.json
-    vite.config.ts
-    index.html
-    src/main.tsx
-    src/vite-env.d.ts
+### Hour 4-8 (Pipeline)
+7. Implement `extractor.py` with Document AI
+8. Create Vector Search index + deploy
+9. Run `load_reference.py` to populate index
+10. Implement `vector_search.py`
 
-  .env.example                          # Environment variable template
-```
+### Hour 8-14 (Frontend)
+11. Install CSS framework
+12. Build Dashboard with real API calls
+13. Build ContractUpload with drag-and-drop
+14. Build GapAnalysis with severity table
+15. Build RegisterView with export
+
+### Hour 14-20 (Integration)
+16. Wire up all routers to agents
+17. Pre-compute demo flow
+18. Test full pipeline end-to-end
+19. Deploy to Cloud Run
+
+### Hour 20-24 (Polish)
+20. UI polish and responsive design
+21. Prepare 3-minute pitch
+22. Final deployment
