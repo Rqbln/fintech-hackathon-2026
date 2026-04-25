@@ -1,6 +1,12 @@
 """
-EvaluatorAgent — maps each extracted clause to DORA Art. 30 requirements
-via Gemini, classifies compliance, and computes a per-document score.
+EvaluatorAgent — maps DORA Art. 30 requirements to vendor contract clauses
+via RAG corpus query + Gemini classification.
+
+Flow for each DORA article:
+  1. query_corpus("[VendorName | category] <requirement text>") → top-5 chunks
+  2. Pass chunks as clause evidence to CLASSIFICATION_PROMPT
+  3. Gemini → compliance_status + score + evidence
+  4. Aggregate 8 article scores → overall_score
 """
 
 import json
@@ -13,12 +19,11 @@ from app.models.schemas import (
     ComplianceMapping,
     ComplianceStatus,
     EvaluationResult,
-    ExtractedClause,
-    SLAEntry,
 )
+from app.services.rag_engine import get_or_create_corpus, query_corpus
 from app.services.vertex_ai import generate
 
-# Chunker categories → DORA Art. 30 articles (mirrors chunker._CATEGORY_PATTERNS)
+# Mirrors chunker._CATEGORY_PATTERNS — maps DORA articles to their chunk category
 _CATEGORY_TO_ARTICLE: dict[str, str] = {
     "service_description": "Art. 30(2)(a)",
     "data_residency":      "Art. 30(2)(b)",
@@ -29,10 +34,11 @@ _CATEGORY_TO_ARTICLE: dict[str, str] = {
     "exit_strategy":       "Art. 30(2)(g)",
     "subcontracting":      "Art. 30(3)",
 }
+_ARTICLE_TO_CATEGORY = {v: k for k, v in _CATEGORY_TO_ARTICLE.items()}
 
 
 def _parse_json(text: str) -> dict:
-    """Strip optional markdown fences and parse JSON from Gemini response."""
+    """Strip optional markdown fences then parse JSON."""
     cleaned = re.sub(r"^```(?:json)?\s*", "", text.strip(), flags=re.MULTILINE)
     cleaned = re.sub(r"\s*```\s*$", "", cleaned.strip(), flags=re.MULTILINE)
     return json.loads(cleaned)
@@ -50,58 +56,65 @@ def _to_status(raw: str, score: float) -> ComplianceStatus:
 
 
 class EvaluatorAgent:
-    """Evaluates vendor compliance against DORA Article 30 and ISO 27001:2022."""
+    """
+    Evaluates a vendor's compliance against DORA Article 30 by querying
+    the RAG corpus (which contains pre-indexed contract chunks + DORA/ISO reference)
+    and classifying each requirement with Gemini.
+    """
 
     async def evaluate(
         self,
-        clauses: list[ExtractedClause],
-        sla_entries: list[SLAEntry],
         vendor_name: str,
         document_id: str,
     ) -> EvaluationResult:
         """
-        For each DORA Art. 30 sub-requirement:
-        1. Find the most relevant clause (by category, then by keyword fallback).
-        2. Ask Gemini to classify compliance and score it.
-        3. Aggregate per-article results into an overall compliance score.
+        Evaluate vendor compliance for all 8 DORA Art. 30 sub-requirements.
+
+        Uses query_corpus() to retrieve the most relevant contract chunks for
+        each DORA article, then asks Gemini to classify compliance.
+        The corpus already contains:
+          - Chunks from all uploaded contracts (prefixed "[VendorName | category]")
+          - DORA Art. 30 reference items
+          - ISO 27001 controls
+          - Bank internal rules
         """
-        # Index clauses by category
-        by_category: dict[str, list[ExtractedClause]] = {}
-        for clause in clauses:
-            by_category.setdefault(clause.category, []).append(clause)
-        general_fallback = by_category.get("general", [])
-
-        sla_text = (
-            ", ".join(f"{e.metric}={e.value}{e.unit or ''}" for e in sla_entries)
-            or "None provided"
-        )
-
+        corpus_name = get_or_create_corpus()
         mappings: list[ComplianceMapping] = []
         missing_articles: list[str] = []
 
         for article, req in DORA_ARTICLE_30_TO_ISO.items():
-            # Find the category that maps to this article
-            category = next(
-                (cat for cat, art in _CATEGORY_TO_ARTICLE.items() if art == article),
-                None,
-            )
-            candidates = by_category.get(category or "", []) + general_fallback
+            category = _ARTICLE_TO_CATEGORY.get(article, "general")
 
-            if not candidates:
-                # No clause covers this requirement → hard non-compliant
+            # Query mirrors the chunk format written by extractor._format_for_rag():
+            # "[VendorName | category] requirement check-points"
+            # The vendor prefix steers the RAG toward that vendor's chunks.
+            query = (
+                f"[{vendor_name} | {category}] "
+                f"{req['description']}. "
+                f"{'. '.join(req['check_points'])}"
+            )
+            chunks = query_corpus(corpus_name, query, top_k=5)
+
+            if not chunks:
                 missing_articles.append(article)
                 mappings.append(ComplianceMapping(
                     dora_article=article,
                     iso_control=req.get("iso_control"),
                     clause_id="MISSING",
                     status=ComplianceStatus.NON_COMPLIANT,
-                    evidence="No clause found in the document covering this requirement.",
+                    evidence="No relevant clause found in the corpus for this vendor.",
                     score=0.0,
                 ))
                 continue
 
-            # Pick the most substantive clause (longest text, capped at 5 candidates)
-            best = max(candidates[:5], key=lambda c: len(c.text))
+            # Concatenate top-3 chunks as evidence for Gemini (most relevant first)
+            clause_text = "\n\n---\n\n".join(c["text"] for c in chunks[:3])
+            # Extract SLA values from chunk text if present (numeric patterns)
+            sla_matches = re.findall(
+                r"(?:RTO|RPO|availability|uptime|SLA)[^\d]*(\d+[\.,]?\d*\s*(?:h|hours?|%|min))",
+                clause_text, re.I,
+            )
+            sla_text = ", ".join(sla_matches) if sla_matches else "Not explicitly stated"
 
             prompt = CLASSIFICATION_PROMPT.format(
                 requirement_article=article,
@@ -109,7 +122,7 @@ class EvaluatorAgent:
                 requirement_text=req["iso_description"],
                 check_points=", ".join(req["check_points"]),
                 vendor_name=vendor_name,
-                clause_text=best.text[:2000],
+                clause_text=clause_text[:2500],
                 sla_values=sla_text,
             )
 
@@ -124,10 +137,12 @@ class EvaluatorAgent:
                 status = ComplianceStatus.NOT_ASSESSED
                 evidence = f"Evaluation error: {exc}"
 
+            # clause_id encodes the source: document + article for traceability
+            article_slug = article.replace(" ", "_").replace("(", "").replace(")", "").replace(".", "")
             mappings.append(ComplianceMapping(
                 dora_article=article,
                 iso_control=req.get("iso_control"),
-                clause_id=best.clause_id,
+                clause_id=f"{document_id}_{article_slug}",
                 status=status,
                 evidence=evidence,
                 score=score,
