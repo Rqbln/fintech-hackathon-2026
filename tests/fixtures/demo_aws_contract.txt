@@ -1,0 +1,65 @@
+AWS ENTERPRISE SERVICE AGREEMENT — DEMO FIXTURE
+(Fictitious document for DORA AI Analyst testing)
+
+PARTIES
+This Agreement is entered into between Banque Démo SA ("the Financial Entity"), a credit institution
+authorised under French law, and Amazon Web Services EMEA SARL ("AWS"), registered in Luxembourg.
+
+1. SCOPE OF SERVICES
+AWS shall provide the following ICT services to the Financial Entity:
+  1.1 Amazon EC2 (compute) — multi-region deployment in eu-west-1 (Ireland) and eu-central-1 (Frankfurt).
+  1.2 Amazon S3 (object storage) — data residency guaranteed within EU regions.
+  1.3 Amazon RDS for PostgreSQL — managed database with automated backups (RPO: 1 hour, RTO: 4 hours).
+  1.4 Amazon CloudFront (CDN) — edge delivery; data does not leave EU/EEA POP unless explicitly configured.
+
+2. SUBCONTRACTING
+AWS may engage third-party sub-processors to deliver parts of the services, including but not limited to:
+  - Equinix (data centre colocation in Frankfurt and Dublin)
+  - Lumen Technologies (backbone network transit)
+AWS will notify the Financial Entity in writing at least 30 days prior to engaging a new sub-processor.
+
+3. DATA LOCATION AND RESIDENCY
+All Customer Data shall be processed and stored exclusively within EU/EEA regions as selected by the
+Financial Entity. AWS will not transfer Customer Data outside the EU/EEA without prior written consent.
+In the event AWS plans to change processing locations, it shall notify the Financial Entity no less than
+60 days in advance.
+
+4. DATA PROTECTION AND SECURITY
+4.1 AWS implements technical and organisational measures in accordance with ISO 27001, SOC 2 Type II,
+    and the AWS Shared Responsibility Model.
+4.2 Data in transit is encrypted using TLS 1.2 or higher. Data at rest is encrypted using AES-256.
+4.3 AWS complies with Regulation (EU) 2016/679 (GDPR) as a data processor.
+4.4 Availability, integrity, and confidentiality of Customer Data are maintained through redundant
+    infrastructure and continuous monitoring.
+
+5. SERVICE LEVELS AND CONTINUITY
+5.1 EC2 and RDS availability SLA: 99.99% monthly uptime.
+5.2 In the event of an ICT incident affecting availability, AWS will notify the Financial Entity within
+    one (1) hour of detection.
+5.3 AWS maintains a Business Continuity Plan and Disaster Recovery Plan, which are tested annually.
+    Test results are available to the Financial Entity upon request.
+
+6. ACCESS AND AUDIT RIGHTS
+6.1 The Financial Entity and its competent authority (Autorité de Contrôle Prudentiel et de Résolution,
+    ACPR) shall have the right to audit AWS's ICT services, subject to 30 days' advance notice.
+6.2 AWS shall cooperate fully with such audits and provide relevant documentation.
+6.3 AWS will provide annual third-party audit reports (SOC 2 Type II) as evidence of compliance.
+
+7. TERMINATION AND EXIT
+7.1 Either party may terminate this Agreement with 90 days' written notice.
+7.2 Upon termination, AWS will make Customer Data available for export in standard formats for 30 days.
+7.3 AWS will provide reasonable transition assistance to support migration to an alternative provider.
+
+8. INCIDENT REPORTING
+AWS shall notify the Financial Entity of any ICT-related incident affecting the availability, authenticity,
+integrity, or confidentiality of services within 4 hours of classification as a significant incident.
+A full incident report shall be provided within 72 hours.
+
+9. GOVERNING LAW
+This Agreement is governed by the laws of Luxembourg. Disputes shall be resolved by arbitration under
+ICC rules in Paris, France.
+
+SIGNATURES
+Signed on behalf of Banque Démo SA: [Director, Digital Operations]
+Signed on behalf of Amazon Web Services EMEA SARL: [VP, Enterprise Agreements]
+Date: 15 January 2025

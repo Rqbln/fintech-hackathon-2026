@@ -1,4 +1,4 @@
-.PHONY: dev test lint fmt seed-dora seed-demo demo reset-graph neo4j-up neo4j-down
+.PHONY: dev test lint fmt seed-dora seed-demo demo reset-graph neo4j-up neo4j-down smoke pipeline
 
 # ── Dev server ────────────────────────────────────────────────────────────────
 dev:
@@ -7,6 +7,12 @@ dev:
 # ── Tests ─────────────────────────────────────────────────────────────────────
 test:
 	uv run pytest tests/ -v
+
+smoke:
+	uv run python scripts/test_smoke.py
+
+pipeline:
+	uv run python scripts/test_pipeline.py
 
 test-unit:
 	uv run pytest tests/unit/ -v
