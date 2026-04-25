@@ -139,16 +139,26 @@ async def run_remediation(
     findings: list[ObligationFinding],
     vendor_name: str,
 ) -> list[RemediationProposal]:
-    """Generate remediation proposals for all unmet/partially_met findings."""
+    """Generate remediation proposals in parallel for all unmet/partially_met findings."""
+    import asyncio
+
     alternatives_db = _load_alternatives()
     matched_entry = _match_vendor(vendor_name, alternatives_db)
     alternatives_list = _build_alternatives(matched_entry) if matched_entry else []
 
-    proposals = []
-    for finding in findings:
-        if finding.verdict in (Verdict.UNMET, Verdict.PARTIALLY_MET):
-            proposal = await _remediate_one(llm, finding, vendor_name, alternatives_list)
-            proposals.append(proposal)
+    actionable = [f for f in findings if f.verdict in (Verdict.UNMET, Verdict.PARTIALLY_MET)]
+
+    results = await asyncio.gather(
+        *[_remediate_one(llm, f, vendor_name, alternatives_list) for f in actionable],
+        return_exceptions=True,
+    )
+
+    proposals: list[RemediationProposal] = []
+    for finding, result in zip(actionable, results):
+        if isinstance(result, BaseException):
+            log.warning("remediation_failed", obligation_id=finding.obligation_id, error=str(result)[:120])
+        else:
+            proposals.append(result)
 
     log.info("remediation_complete", vendor=vendor_name, proposals=len(proposals))
     return proposals

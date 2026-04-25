@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 from typing import Annotated
 
@@ -31,6 +32,7 @@ async def gap_analysis(
     session_id = str(uuid.uuid4())
 
     try:
+        # Phase 1 — gap analysis (all 12 obligations in parallel)
         findings = await run_gap_analysis(
             llm=llm,
             citation_engine=citation_engine,
@@ -39,7 +41,11 @@ async def gap_analysis(
             obligation_ids=obligation_ids,
         )
 
-        proposals = await run_remediation(llm=llm, findings=findings, vendor_name=vendor_name)
+        # Phase 2 — remediation + executive summary concurrently
+        proposals, exec_summary_placeholder = await asyncio.gather(
+            run_remediation(llm=llm, findings=findings, vendor_name=vendor_name),
+            _build_exec_summary(llm, findings),
+        )
 
         report = await assemble_report(
             llm=llm,
@@ -47,6 +53,7 @@ async def gap_analysis(
             contract_ids=contract_ids,
             findings=findings,
             proposals=proposals,
+            prebuilt_exec_summary=exec_summary_placeholder,
         )
     except Exception as exc:
         raise HTTPException(
@@ -57,3 +64,17 @@ async def gap_analysis(
     store_report(report)
     sessions.record(report)
     return report
+
+
+async def _build_exec_summary(llm, findings) -> str:
+    """Pre-build the executive summary while remediation runs in parallel."""
+    from app.agents.report_assembler import _findings_text, _EXEC_SUMMARY_PROMPT
+    from app.llm.retry import chat_with_retry
+    from llama_index.core.llms import ChatMessage
+
+    prompt = _EXEC_SUMMARY_PROMPT.format(findings_text=_findings_text(findings))
+    try:
+        resp = await chat_with_retry(llm, [ChatMessage(role="user", content=prompt)])
+        return resp.message.content.strip()
+    except Exception:
+        return ""
