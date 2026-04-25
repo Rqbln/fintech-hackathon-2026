@@ -76,7 +76,7 @@ async def _detect_subcontractors(chunks: list[dict]) -> list[dict]:
     config = GenerationConfig(
         response_mime_type="application/json",
         temperature=0.1,
-        max_output_tokens=8192,
+        max_output_tokens=16384,
     )
 
     def _sync():
