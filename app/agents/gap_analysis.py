@@ -61,18 +61,18 @@ async def _evaluate_one(
 ) -> ObligationFinding:
     ob_id = obligation["id"]
 
-    # Step 1: retrieve relevant contract chunks via RAG
+    # Step 1: retrieve relevant contract chunks via RAG (DORA regulation context only)
     query = f"DORA Article {obligation['article']} paragraph {obligation['paragraph']}: {obligation['text']}"
     rag_response = citation_engine.query(query)
-    rag_context = str(rag_response)[:3000]
+    # Keep RAG context short — llama3.1-8b has 8192 token limit
+    rag_context = str(rag_response)[:800]
 
-    # Step 2: LLM verdict
+    # Step 2: LLM verdict — contract text is the primary evidence source
     user_msg = (
-        f"DORA Obligation: {obligation['text']}\n\n"
-        f"Pass criteria: {obligation.get('pass_criteria', '')}\n\n"
-        f"Contract id: {contract_id}\n\n"
-        f"Relevant contract excerpts (from RAG):\n{rag_context}\n\n"
-        f"Contract preview:\n{contract_text_preview[:2000]}"
+        f"DORA Obligation (Art.{obligation['article']} §{obligation['paragraph']}):\n"
+        f"{obligation['text']}\n\n"
+        f"Pass criteria: {obligation.get('pass_criteria', '')[:300]}\n\n"
+        f"Contract text:\n{contract_text_preview[:3000]}"
     )
     messages = [
         ChatMessage(role="system", content=_SYSTEM),

@@ -90,12 +90,10 @@ async def _remediate_one(
     )
 
     user_msg = (
-        f"DORA Obligation: Article {finding.article}, Para {finding.paragraph}\n"
-        f"Obligation text: {finding.description}\n"
-        f"Verdict: {finding.verdict.value}\n"
-        f"Gap: {finding.gap_description}\n"
+        f"DORA Art.{finding.article} §{finding.paragraph}: {finding.description[:300]}\n"
+        f"Verdict: {finding.verdict.value} | Gap: {finding.gap_description[:200]}\n"
         f"Vendor: {vendor_name}\n\n"
-        f"Available EU-sovereign alternatives:\n{alt_summary or 'None identified'}"
+        f"EU-sovereign alternatives:\n{alt_summary or 'None identified'}"
     )
 
     messages = [

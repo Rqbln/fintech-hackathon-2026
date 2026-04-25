@@ -22,10 +22,11 @@ Findings:
 
 
 def _findings_text(findings: list[ObligationFinding]) -> str:
+    # Keep under ~800 tokens for llama3.1-8b
     lines = []
     for f in findings:
-        lines.append(f"• Art.{f.article}/{f.paragraph}: {f.verdict.value} — {f.rationale[:120]}")
-    return "\n".join(lines)
+        lines.append(f"• Art.{f.article}/{f.paragraph}: {f.verdict.value} — {f.rationale[:80]}")
+    return "\n".join(lines[:12])
 
 
 async def assemble_report(

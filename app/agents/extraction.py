@@ -42,7 +42,7 @@ dora-art30-3a, dora-art30-3b, dora-art30-3c, dora-art30-3d, dora-art30-3e,
 dora-art30-3f, dora-art30-3g
 """
 
-_MAX_CONTRACT_CHARS = 12_000  # ~3 k tokens — keep within Cerebras context budget
+_MAX_CONTRACT_CHARS = 6_000  # ~1.5 k tokens — fits llama3.1-8b 8192-token context
 
 
 def _truncate(text: str) -> str:
