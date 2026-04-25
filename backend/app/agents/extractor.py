@@ -23,7 +23,7 @@ class ExtractorAgent:
         document_id = uuid.uuid4().hex[:8]
 
         # 1. Store original PDF in GCS
-        gcs_uri = await upload_document(content, filename, document_id)
+        gcs_uri = await upload_document(content, f"{document_id}_{filename}")
 
         # 2. Table-aware OCR via Document AI
         doc_result = extract_from_bytes(content)
