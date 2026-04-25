@@ -45,12 +45,17 @@ def upload_text_to_corpus(
         f.write(text)
         tmp_path = f.name
     try:
+        transformation_config = rag.TransformationConfig(
+            chunking_config=rag.ChunkingConfig(
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+            )
+        )
         rag_file = rag.upload_file(
             corpus_name=corpus_name,
             path=tmp_path,
             display_name=display_name,
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
+            transformation_config=transformation_config,
         )
         return rag_file.name
     finally:
@@ -63,7 +68,7 @@ def query_corpus(corpus_name: str, query: str, top_k: int = 10) -> list[dict]:
     response = rag.retrieval_query(
         rag_resources=[rag.RagResource(rag_corpus=corpus_name)],
         text=query,
-        similarity_top_k=top_k,
+        rag_retrieval_config=rag.RagRetrievalConfig(top_k=top_k),
     )
     return [
         {"text": ctx.text, "source": getattr(ctx, "source_uri", None), "score": ctx.score}

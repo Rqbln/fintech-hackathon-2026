@@ -15,8 +15,9 @@ def _make_mock_doc(text: str) -> MagicMock:
     return doc
 
 
+@patch("app.services.document_ai._split_pdf", return_value=[(b"%PDF-fake", 0)])
 @patch("app.services.document_ai.documentai.DocumentProcessorServiceClient")
-def test_extract_from_bytes_returns_structure(MockClient):
+def test_extract_from_bytes_returns_structure(MockClient, mock_split):
     text = "Article 1. Scope of services.\n\nArticle 2. RTO is 4h."
     MockClient.return_value.process_document.return_value.document = _make_mock_doc(text)
 
@@ -29,8 +30,9 @@ def test_extract_from_bytes_returns_structure(MockClient):
     assert isinstance(result["tables"], list)
 
 
+@patch("app.services.document_ai._split_pdf", return_value=[(b"%PDF-fake", 0)])
 @patch("app.services.document_ai.documentai.DocumentProcessorServiceClient")
-def test_extract_from_bytes_parses_tables(MockClient):
+def test_extract_from_bytes_parses_tables(MockClient, mock_split):
     text = "RTO | 4h\nRPO | 1h"
     doc = _make_mock_doc(text)
 

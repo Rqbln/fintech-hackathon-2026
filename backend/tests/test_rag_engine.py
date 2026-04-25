@@ -66,6 +66,9 @@ def test_query_corpus_returns_list_of_dicts(mock_vertexai, mock_rag):
         "projects/p/locations/europe-west1/ragCorpora/123", "RTO requirements"
     )
 
+    mock_rag.retrieval_query.assert_called_once()
+    call_kw = mock_rag.retrieval_query.call_args.kwargs
+    assert call_kw["rag_retrieval_config"] is not None
     assert len(results) == 1
     assert results[0]["text"] == "RTO shall not exceed 4 hours."
     assert results[0]["source"] == "gs://bucket/file.txt"
