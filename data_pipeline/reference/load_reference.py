@@ -4,6 +4,7 @@ Run from repo root: python3 data_pipeline/reference/load_reference.py
 """
 import json
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "backend"))
@@ -55,7 +56,7 @@ def _to_text_bank_rule(item: dict) -> str:
     return "\n".join(parts)
 
 
-_FILES: dict[str, tuple[str, callable]] = {
+_FILES: dict[str, tuple[str, Callable[[dict], str]]] = {
     "dora_article_30.json": ("dora_article_30", _to_text_dora),
     "iso27001_controls.json": ("iso27001_controls", _to_text_iso),
     "bank_rules_sample.json": ("bank_rules", _to_text_bank_rule),

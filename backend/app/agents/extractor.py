@@ -21,8 +21,8 @@ class ExtractorAgent:
     ) -> VendorDocument:
         document_id = uuid.uuid4().hex[:8]
 
-        # 1. Store original PDF in GCS
-        gcs_uri = await upload_document(content, filename)
+        # 1. Store original PDF in GCS (document_id prefix prevents filename collisions)
+        gcs_uri = await upload_document(content, filename, document_id)
 
         # 2. Table-aware OCR via Document AI (synchronous — acceptable for MVP)
         doc_result = extract_from_bytes(content)

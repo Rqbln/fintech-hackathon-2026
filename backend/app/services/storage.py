@@ -9,13 +9,15 @@ def get_storage_client() -> storage.Client:
     return storage.Client()
 
 
-async def upload_document(content: bytes, filename: str) -> str:
+async def upload_document(content: bytes, filename: str, document_id: str = "") -> str:
     """Upload a PDF to the documents bucket. Returns the GCS URI."""
     client = get_storage_client()
     bucket = client.bucket(DOCUMENTS_BUCKET)
-    blob = bucket.blob(f"uploads/{filename}")
+    prefix = f"{document_id}_" if document_id else ""
+    blob_name = f"uploads/{prefix}{filename}"
+    blob = bucket.blob(blob_name)
     blob.upload_from_string(content, content_type="application/pdf")
-    return f"gs://{DOCUMENTS_BUCKET}/uploads/{filename}"
+    return f"gs://{DOCUMENTS_BUCKET}/{blob_name}"
 
 
 async def download_reference(path: str) -> bytes:
