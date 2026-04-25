@@ -22,7 +22,7 @@ async def gap_analysis(
     request: Request,
     contract_ids: Annotated[list[str], Body(embed=True)],
     vendor_name: Annotated[str, Body(embed=True)],
-    contract_text_preview: Annotated[str, Body(embed=True, default="")],
+    contract_text_preview: Annotated[str, Body(embed=True)] = "",
     obligation_ids: Annotated[list[str] | None, Body(embed=True)] = None,
     llm=Depends(get_llm),
     citation_engine=Depends(get_citation_engine),
