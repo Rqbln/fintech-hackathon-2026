@@ -1,12 +1,12 @@
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from google.api_core.exceptions import GoogleAPIError
 
+import app.store as store
 from app.agents.extractor import ExtractorAgent
 from app.services.storage import list_objects
 
 router = APIRouter()
 _extractor = ExtractorAgent()
-_store: dict[str, dict] = {}  # In-memory for hackathon MVP
 
 ALLOWED_CONTENT_TYPES = {"application/pdf", "application/x-pdf"}
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
@@ -41,7 +41,7 @@ async def upload_documents(
         except Exception as exc:
             raise HTTPException(status_code=500, detail=f"Extraction failed for {f.filename}: {exc}") from exc
 
-        _store[vendor_doc.document_id] = vendor_doc.model_dump()
+        store.documents[vendor_doc.document_id] = vendor_doc.model_dump()
         results.append({
             "document_id": vendor_doc.document_id,
             "filename": f.filename,
@@ -62,14 +62,14 @@ async def list_documents():
     except GoogleAPIError:
         gcs_objects = []
     return {
-        "documents": list(_store.values()),
-        "total": len(_store),
+        "documents": list(store.documents.values()),
+        "total": len(store.documents),
         "gcs_objects": gcs_objects,
     }
 
 
 @router.get("/{document_id}")
 async def get_document(document_id: str):
-    if document_id not in _store:
+    if document_id not in store.documents:
         raise HTTPException(status_code=404, detail="Document not found")
-    return _store[document_id]
+    return store.documents[document_id]

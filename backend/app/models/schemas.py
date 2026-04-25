@@ -84,3 +84,12 @@ class RegisterEntry(BaseModel):
     contract_start: str | None = None
     contract_end: str | None = None
     compliance_mappings: list[ComplianceMapping] = []
+
+
+class EvaluationResult(BaseModel):
+    document_id: str
+    vendor_name: str
+    overall_score: float  # 0.0 to 1.0 — mean of per-article scores
+    compliance_mappings: list[ComplianceMapping]
+    missing_articles: list[str]  # DORA articles with no matching clause in the document
+    evaluated_at: str  # ISO 8601 UTC
