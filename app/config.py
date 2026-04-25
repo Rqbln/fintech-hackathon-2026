@@ -4,10 +4,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    # LLM
-    z_ai_api_key: str
-    z_ai_base_url: str = "https://api.z.ai/api/paas/v4"
-    z_ai_model: str = "glm-4.7"
+    # LLM — Cerebras inference (OpenAI-compatible)
+    cerebras_api_key: str
+    cerebras_base_url: str = "https://api.cerebras.ai/v1"
+    cerebras_model: str = "zai-glm-4.7"
 
     # Embeddings
     gemini_api_key: str
