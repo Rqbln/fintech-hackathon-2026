@@ -1,0 +1,62 @@
+[
+  {
+    "rule_id": "BR-001",
+    "category": "rto_rpo",
+    "function": "Payment Processing",
+    "criticality": "critical",
+    "requirement": "Recovery Time Objective must not exceed 4 hours for payment processing systems.",
+    "rto_hours": 4,
+    "rpo_hours": 1
+  },
+  {
+    "rule_id": "BR-002",
+    "category": "rto_rpo",
+    "function": "Portfolio Management",
+    "criticality": "critical",
+    "requirement": "Recovery Time Objective must not exceed 8 hours for portfolio management systems.",
+    "rto_hours": 8,
+    "rpo_hours": 4
+  },
+  {
+    "rule_id": "BR-003",
+    "category": "data_residency",
+    "function": "All Functions",
+    "criticality": "critical",
+    "requirement": "All client data must be stored and processed within the European Economic Area (EEA). No transfer to third countries without explicit regulatory approval."
+  },
+  {
+    "rule_id": "BR-004",
+    "category": "audit_rights",
+    "function": "All Critical Functions",
+    "criticality": "high",
+    "requirement": "The bank must retain unrestricted audit and inspection rights over all ICT third-party providers supporting critical functions. Annual audit minimum."
+  },
+  {
+    "rule_id": "BR-005",
+    "category": "subcontracting",
+    "function": "All Critical Functions",
+    "criticality": "critical",
+    "requirement": "No subcontracting of critical ICT services without prior written approval. Full transparency on the subcontracting chain required."
+  },
+  {
+    "rule_id": "BR-006",
+    "category": "incident_reporting",
+    "function": "All Functions",
+    "criticality": "high",
+    "requirement": "ICT incidents affecting service availability must be reported within 4 hours. Root cause analysis must be provided within 72 hours."
+  },
+  {
+    "rule_id": "BR-007",
+    "category": "exit_strategy",
+    "function": "All Critical Functions",
+    "criticality": "high",
+    "requirement": "Exit strategy must guarantee full data portability within 90 days. Transition assistance period of minimum 12 months."
+  },
+  {
+    "rule_id": "BR-008",
+    "category": "concentration_risk",
+    "function": "Infrastructure",
+    "criticality": "high",
+    "requirement": "No single cloud provider shall host more than 60% of critical infrastructure. Multi-cloud or hybrid architecture required for critical functions."
+  }
+]

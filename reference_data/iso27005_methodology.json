@@ -1,0 +1,32 @@
+{
+  "methodology": "ISO 27005:2022 Risk Assessment",
+  "description": "Risk evaluation combining asset importance with contract vulnerability to prioritize remediation.",
+  "risk_levels": {
+    "critical": {"score_range": [0.0, 0.3], "action": "Immediate contract renegotiation required"},
+    "high": {"score_range": [0.3, 0.5], "action": "Remediation plan within 30 days"},
+    "medium": {"score_range": [0.5, 0.7], "action": "Include in next contract renewal"},
+    "low": {"score_range": [0.7, 1.0], "action": "Monitor and document"}
+  },
+  "scoring_dimensions": [
+    {
+      "dimension": "asset_criticality",
+      "weight": 0.3,
+      "description": "How critical is the business function supported by this vendor?"
+    },
+    {
+      "dimension": "contract_coverage",
+      "weight": 0.25,
+      "description": "What percentage of DORA Art. 30 requirements are covered in the contract?"
+    },
+    {
+      "dimension": "sla_alignment",
+      "weight": 0.25,
+      "description": "How well do vendor SLAs match bank internal RTO/RPO targets?"
+    },
+    {
+      "dimension": "concentration_risk",
+      "weight": 0.2,
+      "description": "How substitutable is this vendor? Are there hidden dependency chains?"
+    }
+  ]
+}

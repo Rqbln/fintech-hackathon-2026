@@ -1,0 +1,79 @@
+[
+  {
+    "id": "A.5.19",
+    "title": "Information security in supplier relationships",
+    "description": "Processes and procedures shall be defined and implemented to manage the information security risks associated with the use of supplier's products or services.",
+    "dora_mapping": ["Art. 30(2)(a)"],
+    "check_points": [
+      "Supplier security policy exists",
+      "Security requirements in contracts",
+      "Regular supplier security assessments"
+    ]
+  },
+  {
+    "id": "A.5.20",
+    "title": "Addressing information security within supplier agreements",
+    "description": "Relevant information security requirements shall be established and agreed with each supplier based on the type of supplier relationship.",
+    "dora_mapping": ["Art. 30(2)(g)"],
+    "check_points": [
+      "Security clauses in contracts",
+      "Transition and exit provisions",
+      "Data return obligations"
+    ]
+  },
+  {
+    "id": "A.5.21",
+    "title": "Managing information security in the ICT supply chain",
+    "description": "Processes and procedures shall be defined and implemented to manage the information security risks associated with the ICT products and services supply chain.",
+    "dora_mapping": ["Art. 30(2)(f)", "Art. 30(3)"],
+    "check_points": [
+      "Supply chain risk assessment",
+      "Subcontractor oversight",
+      "Audit rights over supply chain"
+    ]
+  },
+  {
+    "id": "A.5.23",
+    "title": "Information security for use of cloud services",
+    "description": "Processes for acquisition, use, management and exit from cloud services shall be established in accordance with the organization's information security requirements.",
+    "dora_mapping": ["Art. 30(2)(b)"],
+    "check_points": [
+      "Cloud service provider assessment",
+      "Data residency controls",
+      "Multi-cloud strategy evaluation"
+    ]
+  },
+  {
+    "id": "A.5.24",
+    "title": "Information security incident management planning and preparation",
+    "description": "The organization shall plan and prepare for managing information security incidents by defining, establishing and communicating information security incident management processes, roles and responsibilities.",
+    "dora_mapping": ["Art. 30(2)(e)"],
+    "check_points": [
+      "Incident response plan exists",
+      "Notification timeframes defined",
+      "Escalation procedures documented"
+    ]
+  },
+  {
+    "id": "A.5.30",
+    "title": "ICT readiness for business continuity",
+    "description": "ICT readiness shall be planned, implemented, maintained and tested based on business continuity objectives and ICT continuity requirements.",
+    "dora_mapping": ["Art. 30(2)(d)"],
+    "check_points": [
+      "RTO/RPO defined and documented",
+      "Disaster recovery plan tested",
+      "Backup procedures validated"
+    ]
+  },
+  {
+    "id": "A.5.33",
+    "title": "Protection of records",
+    "description": "Records shall be protected from loss, destruction, falsification, unauthorized access and unauthorized release.",
+    "dora_mapping": ["Art. 30(2)(c)"],
+    "check_points": [
+      "Encryption at rest and in transit",
+      "Access control for records",
+      "Retention and deletion policies"
+    ]
+  }
+]

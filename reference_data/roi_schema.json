@@ -1,0 +1,20 @@
+{
+  "description": "DORA Register of Information (RoI) schema based on the 15 ITS data models required by EU regulators.",
+  "models": [
+    {"id": "B_01.01", "name": "Entity maintaining the register", "fields": ["LEI", "name", "type", "country"]},
+    {"id": "B_01.02", "name": "List of branches", "fields": ["branch_id", "country", "competent_authority"]},
+    {"id": "B_01.03", "name": "Entity group structure", "fields": ["parent_LEI", "subsidiary_LEI", "relationship"]},
+    {"id": "B_02.01", "name": "Contractual arrangements - general", "fields": ["contract_ref", "vendor_LEI", "start_date", "end_date", "governing_law"]},
+    {"id": "B_02.02", "name": "Contractual arrangements - critical functions", "fields": ["contract_ref", "function_id", "is_critical", "substitutability"]},
+    {"id": "B_03.01", "name": "ICT third-party service provider", "fields": ["provider_LEI", "name", "country", "is_intragroup"]},
+    {"id": "B_03.02", "name": "ICT service type", "fields": ["service_type", "description", "delivery_model"]},
+    {"id": "B_03.03", "name": "ICT service - function mapping", "fields": ["service_id", "function_id", "data_location"]},
+    {"id": "B_04.01", "name": "ICT service supply chain - subcontractors", "fields": ["subcontractor_LEI", "name", "service_provided", "data_location"]},
+    {"id": "B_05.01", "name": "Functions identification", "fields": ["function_id", "name", "is_critical", "licensing_authority"]},
+    {"id": "B_05.02", "name": "Functions - service mapping", "fields": ["function_id", "service_id", "recovery_time_objective"]},
+    {"id": "B_06.01", "name": "Assessment of criticality/importance", "fields": ["function_id", "impact_assessment", "substitutability_assessment"]},
+    {"id": "B_99.01", "name": "Additional entity information", "fields": ["entity_LEI", "total_assets", "number_of_employees"]},
+    {"id": "B_99.02", "name": "Additional contract information", "fields": ["contract_ref", "annual_cost", "last_audit_date"]},
+    {"id": "B_99.03", "name": "Additional provider information", "fields": ["provider_LEI", "certifications", "insurance_coverage"]}
+  ]
+}
