@@ -62,9 +62,10 @@ async def _evaluate_one(
     ob_id = obligation["id"]
 
     # Step 1: retrieve relevant contract chunks via RAG (DORA regulation context only)
+    # Use aquery — sync query() calls GoogleGenAI._chat() → asyncio.run() which
+    # raises RuntimeError when called from FastAPI's running event loop.
     query = f"DORA Article {obligation['article']} paragraph {obligation['paragraph']}: {obligation['text']}"
-    rag_response = citation_engine.query(query)
-    # Keep RAG context short — llama3.1-8b has 8192 token limit
+    rag_response = await citation_engine.aquery(query)
     rag_context = str(rag_response)[:800]
 
     # Step 2: LLM verdict — contract text is the primary evidence source
