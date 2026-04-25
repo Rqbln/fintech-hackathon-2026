@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     # LLM — Cerebras inference (OpenAI-compatible)
     cerebras_api_key: str
     cerebras_base_url: str = "https://api.cerebras.ai/v1"
-    cerebras_model: str = "qwen-3-235b-a22b-instruct-2507"
+    cerebras_model: str = "llama3.1-8b"
 
     # Embeddings
     gemini_api_key: str
