@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pydantic import BaseModel, Field
 
@@ -8,7 +8,7 @@ from .remediation import RemediationProposal
 
 class ReportArtifact(BaseModel):
     session_id: str
-    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     contract_ids: list[str] = Field(default_factory=list)
     executive_summary: str = ""
     findings: list[ObligationFinding] = Field(default_factory=list)
