@@ -1,12 +1,12 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Request
 
+from app import sessions
 from app.agents.gap_analysis import run_gap_analysis
 from app.agents.remediation import run_remediation
 from app.agents.report_assembler import assemble_report
-from app import sessions
 from app.api.report import store_report
 from app.deps import get_citation_engine, get_llm
 from app.schemas import ReportArtifact
@@ -30,23 +30,29 @@ async def gap_analysis(
 ):
     session_id = str(uuid.uuid4())
 
-    findings = await run_gap_analysis(
-        llm=llm,
-        citation_engine=citation_engine,
-        contract_id=contract_ids[0] if contract_ids else "unknown",
-        contract_text_preview=contract_text_preview,
-        obligation_ids=obligation_ids,
-    )
+    try:
+        findings = await run_gap_analysis(
+            llm=llm,
+            citation_engine=citation_engine,
+            contract_id=contract_ids[0] if contract_ids else "unknown",
+            contract_text_preview=contract_text_preview,
+            obligation_ids=obligation_ids,
+        )
 
-    proposals = await run_remediation(llm=llm, findings=findings, vendor_name=vendor_name)
+        proposals = await run_remediation(llm=llm, findings=findings, vendor_name=vendor_name)
 
-    report = await assemble_report(
-        llm=llm,
-        session_id=session_id,
-        contract_ids=contract_ids,
-        findings=findings,
-        proposals=proposals,
-    )
+        report = await assemble_report(
+            llm=llm,
+            session_id=session_id,
+            contract_ids=contract_ids,
+            findings=findings,
+            proposals=proposals,
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "gap_analysis_failed", "message": str(exc)[:500]},
+        ) from exc
 
     store_report(report)
     sessions.record(report)

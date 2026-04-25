@@ -8,6 +8,7 @@ For each obligation the agent:
 JSON-mode prompting — same pattern as ExtractionAgent.
 """
 
+import asyncio
 import json
 import re
 from pathlib import Path
@@ -127,14 +128,44 @@ async def run_gap_analysis(
     contract_text_preview: str,
     obligation_ids: list[str] | None = None,
 ) -> list[ObligationFinding]:
-    """Evaluate all (or a subset of) DORA Art.30 obligations against a contract."""
+    """Evaluate DORA Art.30 obligations in parallel — one coroutine per obligation.
+
+    asyncio.gather() fires all LLM calls concurrently, reducing wall-clock time
+    from N×T to ~T (where T is the latency of a single LLM round-trip).
+    Individual failures are caught and recorded as Verdict.UNKNOWN so the
+    rest of the report is unaffected.
+    """
     obligations = _load_obligations()
     if obligation_ids:
         obligations = [o for o in obligations if o["id"] in obligation_ids]
 
-    findings = []
-    for ob in obligations:
-        finding = await _evaluate_one(llm, citation_engine, ob, contract_id, contract_text_preview)
-        findings.append(finding)
+    log.info("gap_analysis_start", obligations=len(obligations), contract_id=contract_id)
 
+    results = await asyncio.gather(
+        *[
+            _evaluate_one(llm, citation_engine, ob, contract_id, contract_text_preview)
+            for ob in obligations
+        ],
+        return_exceptions=True,
+    )
+
+    findings: list[ObligationFinding] = []
+    for ob, result in zip(obligations, results):
+        if isinstance(result, BaseException):
+            log.warning("gap_finding_failed", obligation_id=ob["id"], error=str(result)[:120])
+            findings.append(
+                ObligationFinding(
+                    obligation_id=ob["id"],
+                    article=ob["article"],
+                    paragraph=ob["paragraph"],
+                    description=ob["text"],
+                    verdict=Verdict.UNKNOWN,
+                    rationale=f"Evaluation error: {str(result)[:100]}",
+                    risk_level="medium",
+                )
+            )
+        else:
+            findings.append(result)
+
+    log.info("gap_analysis_complete", findings=len(findings))
     return findings
