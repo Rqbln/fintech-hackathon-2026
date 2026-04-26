@@ -2,13 +2,14 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
-import { ArrowLeft, Download, RefreshCw, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, RefreshCw, Loader2, LayoutList } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { GraphResponse, NodeAttributes, GraphEdge } from "@/lib/types";
 import { getGraph, getReportMarkdown } from "@/lib/api";
 import VendorPanel from "@/components/graph/VendorPanel";
-import { scoreToColor, scoreToLabel, cn } from "@/lib/utils";
+import PortfolioPanel from "@/components/graph/PortfolioPanel";
+import { scoreToLabel, cn } from "@/lib/utils";
 
 // Sigma must be client-only (WebGL)
 const GraphCanvas = dynamic(() => import("@/components/graph/GraphCanvas"), {
@@ -43,6 +44,7 @@ export default function GraphPage() {
   const [vendorContracts, setVendorContracts] = useState<string[]>([]);
   const [exportLoading, setExportLoading] = useState(false);
   const [lastSessionId, setLastSessionId] = useState<string | null>(null);
+  const [showPortfolio, setShowPortfolio] = useState(false);
 
   // Load graph on mount
   useEffect(() => {
@@ -77,6 +79,14 @@ export default function GraphPage() {
     setSelectedAttrs(null);
     setVendorContracts([]);
   }, []);
+
+  const handlePortfolioVendorClick = useCallback(
+    (key: string, attrs: NodeAttributes) => {
+      setShowPortfolio(false);
+      handleNodeClick(key, attrs);
+    },
+    [handleNodeClick]
+  );
 
   const handleRefreshGraph = async () => {
     setLoading(true);
@@ -158,6 +168,20 @@ export default function GraphPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          {graphData && (
+            <button
+              onClick={() => setShowPortfolio((v) => !v)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors",
+                showPortfolio
+                  ? "bg-indigo-600/80 text-white"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/60"
+              )}
+            >
+              <LayoutList size={13} />
+              Portfolio
+            </button>
+          )}
           <button
             onClick={handleRefreshGraph}
             disabled={loading}
@@ -253,6 +277,15 @@ export default function GraphPage() {
             ))}
             <p className="text-[10px] text-slate-600 mt-1.5">Click a vendor to analyse</p>
           </motion.div>
+        )}
+
+        {/* Portfolio panel */}
+        {graphData && showPortfolio && (
+          <PortfolioPanel
+            nodes={graphData.nodes}
+            onVendorClick={handlePortfolioVendorClick}
+            onClose={() => setShowPortfolio(false)}
+          />
         )}
 
         {/* Vendor panel */}

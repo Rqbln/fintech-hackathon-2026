@@ -67,7 +67,8 @@ export async function streamGapAnalysis(
     obligation_ids?: string[];
   },
   onEvent: (event: GapStreamEvent) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  onCached?: () => void,
 ): Promise<void> {
   const res = await fetch("/api/gap-analysis-stream", {
     method: "POST",
@@ -78,6 +79,10 @@ export async function streamGapAnalysis(
 
   if (!res.ok || !res.body) {
     throw new Error(`gap-analysis-stream failed: ${res.status}`);
+  }
+
+  if (res.headers.get("X-Cache") === "HIT") {
+    onCached?.();
   }
 
   const reader = res.body.getReader();

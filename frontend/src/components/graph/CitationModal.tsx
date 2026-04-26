@@ -13,18 +13,27 @@ interface Props {
 
 export default function CitationModal({ contractId, page, quote, onClose }: Props) {
   const isOpen = !!contractId;
-  const [currentPage, setCurrentPage] = useState(page);
+  const [currentPage, setCurrentPage] = useState(page > 0 ? page : 1);
   const [loading, setLoading] = useState(true);
   const embedRef = useRef<HTMLObjectElement>(null);
 
-  // Sync page prop on open
+  // Resolve the exact page containing the quote, then open the PDF there
   useEffect(() => {
-    setCurrentPage(page > 0 ? page : 1);
+    if (!contractId) return;
     setLoading(true);
-  }, [contractId, page]);
+
+    if (quote) {
+      fetch(`/api/documents/${contractId}/find-text?q=${encodeURIComponent(quote)}`)
+        .then((r) => r.json())
+        .then((data: { page: number }) => setCurrentPage(data.page))
+        .catch(() => setCurrentPage(page > 0 ? page : 1));
+    } else {
+      setCurrentPage(page > 0 ? page : 1);
+    }
+  }, [contractId, page, quote]);
 
   const pdfSrc = contractId
-    ? `/api/documents/${contractId}/pdf#page=${currentPage}`
+    ? `/api/documents/${contractId}/pdf?highlight=${encodeURIComponent(quote)}#page=${currentPage}`
     : "";
 
   // Close on Escape

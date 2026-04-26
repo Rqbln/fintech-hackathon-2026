@@ -65,7 +65,7 @@ function FileRow({ uf }: { uf: UploadedFile }) {
 
       {isRunning && (
         <div className="mt-2 space-y-1.5">
-          {STEPS.map((step, i) => (
+          {STEPS.map((step) => (
             <div key={step} className="flex items-center gap-2">
               <Loader2 size={11} className="animate-spin text-indigo-400 shrink-0" />
               <span className="text-xs text-slate-400">{step}</span>

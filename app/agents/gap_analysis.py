@@ -64,7 +64,7 @@ async def _evaluate_one(
         f"DORA Obligation (Art.{obligation['article']} §{obligation['paragraph']}):\n"
         f"{obligation['text']}\n\n"
         f"Pass criteria: {obligation.get('pass_criteria', '')[:300]}\n\n"
-        f"Contract text:\n{contract_text_preview[:3000]}"
+        f"Contract text:\n{contract_text_preview[:6000]}"
     )
     messages = [
         ChatMessage(role="system", content=_SYSTEM),

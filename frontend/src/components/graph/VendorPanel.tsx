@@ -35,7 +35,6 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
   useEffect(() => {
     if (!isOpen || !nodeAttrs) return;
 
-    // Reset state
     setFindings([]);
     setProposals([]);
     setExecSummary("");
@@ -48,32 +47,44 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
     const ctrl = new AbortController();
     abortRef.current = ctrl;
 
-    streamGapAnalysis(
-      {
-        contract_ids: contractIds.length ? contractIds : [nodeKey!],
-        vendor_name: nodeAttrs.label,
-        contract_text_preview: "",
-      },
-      (event) => {
-        if (event.type === "finding") {
-          setFindings((prev) => [...prev, event.data]);
-        } else if (event.type === "done") {
-          setProposals(event.report.remediation_proposals);
-          setExecSummary(event.report.executive_summary);
-          onSessionReady(event.report.session_id);
-          setDone(true);
-          setStreaming(false);
-        } else if (event.type === "error") {
-          setError(event.message);
-          setStreaming(false);
+    const ids = contractIds.length ? contractIds : [nodeKey!];
+
+    const run = async () => {
+      // Fetch stored contract text so the LLM has real content to analyse
+      let contractText = "";
+      try {
+        const r = await fetch(`/api/contracts/${ids[0]}/preview`, { signal: ctrl.signal });
+        if (r.ok) {
+          const d = await r.json() as { text: string };
+          contractText = d.text ?? "";
         }
-      },
-      ctrl.signal
-    )
-      .catch((e: Error) => {
-        if (e.name !== "AbortError") setError(e.message);
-        setStreaming(false);
-      });
+      } catch { /* proceed without text — analysis still runs */ }
+
+      await streamGapAnalysis(
+        { contract_ids: ids, vendor_name: nodeAttrs.label, contract_text_preview: contractText },
+        (event) => {
+          if (event.type === "finding") {
+            setFindings((prev) => [...prev, event.data]);
+          } else if (event.type === "done") {
+            setProposals(event.report.remediation_proposals);
+            setExecSummary(event.report.executive_summary);
+            onSessionReady(event.report.session_id);
+            setDone(true);
+            setStreaming(false);
+          } else if (event.type === "error") {
+            setError(event.message);
+            setStreaming(false);
+          }
+        },
+        ctrl.signal,
+        () => setCached(true),
+      );
+    };
+
+    run().catch((e: Error) => {
+      if (e.name !== "AbortError") setError(e.message);
+      setStreaming(false);
+    });
 
     return () => ctrl.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps

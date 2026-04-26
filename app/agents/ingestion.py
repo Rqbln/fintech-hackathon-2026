@@ -11,6 +11,7 @@ Flow:
 import structlog
 from llama_index.core.workflow import StartEvent, StopEvent, Workflow, step
 
+from app import contract_store
 from app.rag.ingestion_pipeline import ingest_pdf, parse_pdf
 
 from .events import DocParsedEvent, ExtractedEvent, GraphUpdatedEvent, IngestionResult
@@ -52,6 +53,7 @@ class ContractIngestionWorkflow(Workflow):
             llama_parse_api_key=self._llama_parse_api_key,
         )
 
+        contract_store.store(contract_id, full_text)
         log.info("workflow_parsed_and_indexed", contract_id=contract_id, nodes=len(node_ids))
         return DocParsedEvent(contract_id=contract_id, full_text=full_text, node_ids=node_ids)
 
