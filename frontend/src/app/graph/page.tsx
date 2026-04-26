@@ -155,7 +155,7 @@ export default function GraphPage() {
       : "text-indigo-600 bg-indigo-50 border-indigo-200";
 
   return (
-    <div className="dot-bg h-screen flex flex-col overflow-hidden">
+    <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
       {/* Navbar */}
       <nav className="shrink-0 flex items-center justify-between px-5 py-3 bg-white backdrop-blur border-b border-slate-200 z-10">
         <div className="flex items-center gap-4">
@@ -217,7 +217,7 @@ export default function GraphPage() {
       </nav>
 
       {/* Main area */}
-      <div className="flex-1 relative overflow-hidden bg-white">
+      <div className="dot-bg flex-1 relative overflow-hidden">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center z-10">
             <div className="flex flex-col items-center gap-3 text-slate-500">

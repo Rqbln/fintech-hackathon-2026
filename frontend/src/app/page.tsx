@@ -112,7 +112,7 @@ export default function UploadPage() {
   };
 
   return (
-    <main className="dot-bg min-h-screen flex flex-col items-center justify-center px-4 py-16">
+    <main className="min-h-screen flex flex-col items-center justify-center px-4 py-16 bg-slate-50">
       <div className="w-full max-w-xl">
         {/* Logo / header */}
         <div className="text-center mb-10">

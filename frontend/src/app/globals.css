@@ -24,11 +24,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Dot-grid texture — apply to any slate-50 surface that needs depth */
+/* Dot-grid texture — graph canvas background only */
 .dot-bg {
-  background-color: #f8fafc;
-  background-image: radial-gradient(circle, #94a3b8 1.5px, transparent 1.5px);
-  background-size: 28px 28px;
+  background-color: #ffffff;
+  background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 /* Tabular numbers for all score/percentage displays */
