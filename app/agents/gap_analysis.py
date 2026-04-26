@@ -24,20 +24,31 @@ _OBLIGATIONS_PATH = Path(__file__).parent.parent / "data" / "dora_obligations.ya
 _CONCURRENCY = 4  # max simultaneous LLM calls — stays under Cerebras 100 RPM burst
 
 _SYSTEM = """\
-You are a DORA (EU 2022/2554) compliance analyst. Given a DORA obligation and excerpts
-from a vendor contract, assess whether the contract satisfies the obligation.
+You are a DORA (EU 2022/2554) compliance analyst. Produce a BALANCED, objective assessment
+of whether the vendor contract satisfies the given obligation. A real contract will satisfy
+some obligations and fail others — do not default to all-red or all-green.
 
-Return ONLY a valid JSON object — no markdown fences:
+Verdict definitions:
+  "met"           — Contract contains explicit language that satisfies the obligation. You must quote it.
+  "partially_met" — Contract addresses the obligation but incompletely or ambiguously.
+  "unmet"         — Contract is clearly silent on this obligation OR explicitly contradicts it.
+  "unknown"       — Contract excerpt is too short or too redacted to make a fair determination.
+
+Rules:
+1. Actively search for compliant clauses BEFORE concluding "unmet". Quote any supporting language.
+2. Use "unknown" — NOT "unmet" — when the text is insufficient to evaluate.
+3. "met" verdict → risk_level must be "low" and gap_description must be empty string.
+4. "unmet"/"partially_met" → risk_level reflects severity of the compliance gap.
+5. A balanced analysis finds a mix across obligations. Avoid all-red results.
+
+Return ONLY valid JSON, no markdown fences:
 {
   "verdict": "met" | "partially_met" | "unmet" | "unknown",
-  "rationale": "one to three sentence explanation citing specific contract language",
-  "gap_description": "what is missing or weak (empty string if verdict is met)",
+  "rationale": "2-3 sentences citing specific contract language, or explaining what is absent",
+  "gap_description": "what is missing or weak — empty string if verdict is met",
   "risk_level": "low" | "medium" | "high" | "critical",
-  "evidence_quotes": ["verbatim excerpt from contract that is most relevant, ≤ 150 chars"]
+  "evidence_quotes": ["verbatim excerpt ≤ 150 chars most relevant to the verdict"]
 }
-
-Be strict: 'met' requires explicit contractual language. 'partially_met' if present but incomplete.
-'unmet' if the obligation is not addressed at all.
 """
 
 
@@ -60,11 +71,19 @@ async def _evaluate_one(
     """Single obligation evaluation — one LLM call, no RAG (contract text is primary)."""
     ob_id = obligation["id"]
 
+    contract_excerpt = contract_text_preview[:6000]
+    text_note = (
+        "\n\nNOTE: The contract excerpt above is very short. "
+        "Use verdict 'unknown' for obligations you cannot fairly evaluate from this text."
+        if len(contract_excerpt) < 300 else ""
+    )
+
     user_msg = (
         f"DORA Obligation (Art.{obligation['article']} §{obligation['paragraph']}):\n"
         f"{obligation['text']}\n\n"
         f"Pass criteria: {obligation.get('pass_criteria', '')[:300]}\n\n"
-        f"Contract text:\n{contract_text_preview[:6000]}"
+        f"Contract text:\n{contract_excerpt}"
+        f"{text_note}"
     )
     messages = [
         ChatMessage(role="system", content=_SYSTEM),
