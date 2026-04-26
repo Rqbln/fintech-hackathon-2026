@@ -6,7 +6,7 @@ from llama_index.core.query_engine import CitationQueryEngine
 
 def make_citation_engine(
     index: VectorStoreIndex,
-    similarity_top_k: int = 5,
+    similarity_top_k: int = 24,
     citation_chunk_size: int = 512,
 ) -> CitationQueryEngine:
     """Return a CitationQueryEngine that requires source citations for every response.

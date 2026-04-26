@@ -101,7 +101,7 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
       renderEdgeLabels: false,
       labelFont: "Inter, system-ui, sans-serif",
       labelSize: 12,
-      labelColor: { color: "#94a3b8" },
+      labelColor: { color: "#334155" },
       labelDensity: 0.07,
       labelGridCellSize: 80,
       minEdgeThickness: 0.5,
@@ -154,13 +154,13 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
       if (!selectedNode) return data;
       if (node === selectedNode) return { ...data, zIndex: 5, size: (data.baseSize ?? 15) * 1.35 };
       if (graph.areNeighbors(selectedNode, node)) return data;
-      return { ...data, color: "#1e293b", label: undefined, size: (data.baseSize ?? 10) * 0.7 };
+      return { ...data, color: "#cbd5e1", label: undefined, size: (data.baseSize ?? 10) * 0.7 };
     });
 
     renderer.setSetting("edgeReducer", (edge, data) => {
       if (!selectedNode) return data;
       if (graph.hasExtremity(edge, selectedNode)) return { ...data, size: (data.size ?? 1) * 2.5, color: "#6366f188" };
-      return { ...data, color: "#0f172a", size: 0.4 };
+      return { ...data, color: "#cbd5e1", size: 0.4 };
     });
 
     renderer.refresh();

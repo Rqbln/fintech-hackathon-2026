@@ -129,3 +129,38 @@ export interface UploadedFile {
   score?: number;
   error?: string;
 }
+
+export interface CaseProfile {
+  institution_name: string;
+  institution_type: "Bank" | "Insurance" | "PSP/Fintech" | "Asset Manager" | "Other";
+  jurisdiction: string;
+  regulator_focus: string;
+  business_owner: string;
+  notes?: string;
+}
+
+export interface FindTextResult {
+  contract_id: string;
+  query: string;
+  page: number;
+  found: boolean;
+}
+
+export interface SessionSummary {
+  session_id: string;
+  created_at: string;
+  contract_ids: string[];
+  overall_risk_level: string;
+  obligations_met: number;
+  obligations_partial: number;
+  obligations_unmet: number;
+  vendor_names: string[];
+}
+
+export interface VendorConcentrationItem {
+  id: string;
+  name: string;
+  score: number;
+  country: string;
+  is_critical: boolean;
+}

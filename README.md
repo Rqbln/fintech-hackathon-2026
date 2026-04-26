@@ -9,7 +9,7 @@ AI-powered DORA (Digital Operational Resilience Act) compliance analysis for EU 
 ```bash
 # 1. Copy and fill in env vars
 cp .env.example .env
-# edit .env with your Z.ai, Gemini, GCP, and Neo4j credentials
+# edit .env with your LLM provider, Gemini, GCP, and Neo4j credentials
 
 # 2. Start local Neo4j
 make neo4j-up
@@ -41,7 +41,7 @@ make seed-demo
 | API | FastAPI 0.136+ |
 | Agent orchestration | LlamaIndex Workflows 2.15+ |
 | RAG + citations | LlamaIndex 0.14+ |
-| LLM | Z.ai GLM-4.7 (OpenAI-compatible) |
+| LLM | Gemini or Z.ai GLM-4.7 (switchable via `LLM_PROVIDER`) |
 | Embeddings | Gemini Embedding 2 (768-dim MRL) |
 | Vector store | Vertex AI Vector Search v2.0 |
 | Graph DB | Neo4j (AuraDB on GCP / local docker) |

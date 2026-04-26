@@ -8,12 +8,13 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFi
 from app import jobs
 from app.agents import ContractIngestionWorkflow
 from app.deps import get_embed_model, get_ingestion_workflow, get_settings, get_vector_store
+from app.gcs_contracts import upload_contract_file
+from app.gcs_dora import fetch_dora_pdf_bytes
 from app.rag.ingestion_pipeline import ingest_pdf
 
 log = structlog.get_logger()
 router = APIRouter()
 
-_DORA_PDF_PATH = Path(__file__).parent.parent.parent / "tests" / "fixtures" / "dora_regulation.pdf"
 _DORA_DOC_ID = "DORA-2022-2554-EN"
 _DORA_INGESTED_FLAG = Path("/tmp/dora_ingested.flag")
 
@@ -28,13 +29,11 @@ async def ingest_dora(
     if _DORA_INGESTED_FLAG.exists() and not force:
         return {"status": "already_ingested", "document_id": _DORA_DOC_ID}
 
-    if not _DORA_PDF_PATH.exists():
-        raise HTTPException(
-            status_code=404,
-            detail=f"DORA PDF not found at {_DORA_PDF_PATH}. Run scripts/seed_dora.py first.",
-        )
+    try:
+        file_bytes, bucket_name, object_name = fetch_dora_pdf_bytes(settings)
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail=f"DORA PDF not found in configured GCS bucket: {exc}") from exc
 
-    file_bytes = _DORA_PDF_PATH.read_bytes()
     node_ids = await ingest_pdf(
         file_bytes=file_bytes,
         document_id=_DORA_DOC_ID,
@@ -42,9 +41,15 @@ async def ingest_dora(
         vector_store=vector_store,
         embed_model=embed_model,
         llama_parse_api_key=settings.llama_parse_api_key,
+        use_llamaparse=settings.llama_parse_enabled,
     )
     _DORA_INGESTED_FLAG.touch()
-    return {"status": "ingested", "document_id": _DORA_DOC_ID, "nodes": len(node_ids)}
+    return {
+        "status": "ingested",
+        "document_id": _DORA_DOC_ID,
+        "nodes": len(node_ids),
+        "source": f"gs://{bucket_name}/{object_name}",
+    }
 
 
 async def _run_pipeline(job_id: str, file_bytes: bytes, doc_id: str, workflow: ContractIngestionWorkflow) -> None:
@@ -70,6 +75,7 @@ async def ingest_contract(
     background_tasks: BackgroundTasks,
     contract_id: str | None = None,
     workflow: ContractIngestionWorkflow = Depends(get_ingestion_workflow),
+    settings=Depends(get_settings),
 ):
     if file.content_type not in ("application/pdf", "application/octet-stream"):
         raise HTTPException(status_code=400, detail="Only PDF files are accepted.")
@@ -78,11 +84,18 @@ async def ingest_contract(
     doc_id = contract_id or hashlib.md5(file_bytes).hexdigest()[:12]
     job_id = uuid.uuid4().hex[:8]
 
+    gcs_uri = upload_contract_file(
+        settings,
+        contract_id=doc_id,
+        file_name=file.filename or f"{doc_id}.pdf",
+        file_bytes=file_bytes,
+    )
+
     jobs.create(job_id, doc_id)
     background_tasks.add_task(_run_pipeline, job_id, file_bytes, doc_id, workflow)
 
-    log.info("job_queued", job_id=job_id, contract_id=doc_id)
-    return {"job_id": job_id, "status": "running", "contract_id": doc_id}
+    log.info("job_queued", job_id=job_id, contract_id=doc_id, gcs_uri=gcs_uri)
+    return {"job_id": job_id, "status": "running", "contract_id": doc_id, "gcs_uri": gcs_uri}
 
 
 @router.get("/jobs/{job_id}", summary="Poll ingest pipeline job status")

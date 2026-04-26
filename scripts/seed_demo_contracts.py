@@ -103,6 +103,7 @@ async def main() -> None:
         vector_store=vector_store,
         neo4j_driver=driver,
         llama_parse_api_key=settings.llama_parse_api_key,
+        use_llamaparse=settings.llama_parse_enabled,
         timeout=300,
     )
 

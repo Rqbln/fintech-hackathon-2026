@@ -1,4 +1,4 @@
-import type { GraphResponse, Job, ReportArtifact } from "./types";
+import type { FindTextResult, GraphResponse, Job, ReportArtifact, SessionSummary, VendorConcentrationItem } from "./types";
 
 const BASE = "";  // rewrites proxy /api/* to FastAPI
 
@@ -24,7 +24,7 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 export async function ingestContract(
   file: File,
   contractId?: string
-): Promise<{ job_id: string; contract_id: string; status: string }> {
+): Promise<{ job_id: string; contract_id: string; status: string; gcs_uri?: string }> {
   const form = new FormData();
   form.append("file", file);
   const url = contractId
@@ -45,6 +45,10 @@ export async function getGraph(rootVendor?: string, depth = 2): Promise<GraphRes
   return get<GraphResponse>(`/api/graph?${params}`);
 }
 
+export async function getVendorConcentration(): Promise<VendorConcentrationItem[]> {
+  return get<VendorConcentrationItem[]>("/api/graph/concentration");
+}
+
 export async function runGapAnalysis(params: {
   contract_ids: string[];
   vendor_name: string;
@@ -56,6 +60,7 @@ export async function runGapAnalysis(params: {
 
 export type GapStreamEvent =
   | { type: "finding"; data: import("./types").ObligationFinding }
+  | { type: "progress"; stage: "analysis" | "remediation" | "done"; completed: number; total: number; message?: string }
   | { type: "done"; report: import("./types").ReportArtifact }
   | { type: "error"; message: string };
 
@@ -65,6 +70,8 @@ export async function streamGapAnalysis(
     vendor_name: string;
     contract_text_preview?: string;
     obligation_ids?: string[];
+    primary_contract_id?: string;
+    use_cache?: boolean;
   },
   onEvent: (event: GapStreamEvent) => void,
   signal?: AbortSignal
@@ -109,4 +116,36 @@ export async function getReportMarkdown(sessionId: string): Promise<string> {
   const res = await fetch(`/api/report/${sessionId}/markdown`);
   if (!res.ok) throw new Error(`Report fetch failed: ${res.status}`);
   return res.text();
+}
+
+export async function getReport(sessionId: string): Promise<ReportArtifact> {
+  return get<ReportArtifact>(`/api/report/${sessionId}`);
+}
+
+export async function listSessions(): Promise<SessionSummary[]> {
+  return get<SessionSummary[]>("/api/sessions");
+}
+
+export async function getSessionTrace(sessionId: string): Promise<ReportArtifact> {
+  return get<ReportArtifact>(`/api/sessions/${sessionId}/trace`);
+}
+
+export async function findTextPage(contractId: string, quote: string): Promise<FindTextResult> {
+  const params = new URLSearchParams({ q: quote });
+  return get<FindTextResult>(`/api/documents/${encodeURIComponent(contractId)}/find-text?${params.toString()}`);
+}
+
+export function buildHighlightedPdfUrl(contractId: string, quote: string, page?: number): string {
+  const params = new URLSearchParams();
+  params.append("highlights", quote);
+  if (page && page > 0) params.set("page", String(page));
+  return `/api/documents/${encodeURIComponent(contractId)}/pdf?${params.toString()}#page=${page && page > 0 ? page : 1}`;
+}
+
+export function buildMultiHighlightedPdfUrl(contractId: string, quotes: string[], page?: number): string {
+  const params = new URLSearchParams();
+  const deduped = Array.from(new Set(quotes.map((q) => q.trim()).filter(Boolean))).slice(0, 8);
+  for (const q of deduped) params.append("highlights", q);
+  if (page && page > 0) params.set("page", String(page));
+  return `/api/documents/${encodeURIComponent(contractId)}/pdf?${params.toString()}#page=${page && page > 0 ? page : 1}`;
 }

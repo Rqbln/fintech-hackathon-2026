@@ -22,7 +22,8 @@ from app.rag.store import get_or_create_vector_store
 
 
 def test_llm():
-    print(f"\n── LLM (Cerebras {settings.cerebras_model}) ──")
+    model = settings.gemini_llm_model if settings.llm_provider == "gemini" else settings.cerebras_model
+    print(f"\n── LLM ({settings.llm_provider} {model}) ──")
     llm = make_llm(settings)
     LlamaSettings.llm = llm  # set globally so RAG also uses it
     # Use chat() — Cerebras only exposes /v1/chat/completions, not /v1/completions

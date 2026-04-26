@@ -44,18 +44,35 @@ Edit `.env`:
 
 ```env
 # ── Required ──────────────────────────────────────────────────────────────────
-CEREBRAS_API_KEY=csk-...          # https://inference.cerebras.ai → API Keys
+LLM_PROVIDER=gemini               # recommended for demo stability/latency
+GEMINI_LLM_MODEL=gemini-2.5-flash
+FAST_MODE=true                    # demo acceleration mode
 GEMINI_API_KEY=AIza...            # https://aistudio.google.com → Get API key
 GCP_PROJECT=your-project-id      # gcloud projects list
-GCS_BUCKET=your-bucket-name      # must exist in the same project
+GCS_BUCKET_CONTRAT=your-contract-bucket-name  # preferred for vendor contracts
+GCS_BUCKET_DORA=your-dora-bucket-name         # preferred for DORA corpus
+GCS_DORA_OBJECT=dora/dora_regulation.pdf      # optional explicit object path
 NEO4J_PASSWORD=your-password     # any string for local dev
 
+# Backward compatibility:
+# GCS_BUCKET=your-bucket-name     # used if *_CONTRAT/*_DORA are not set
+
+# Optional if you want to use Cerebras instead of Gemini:
+# LLM_PROVIDER=cerebras
+# CEREBRAS_API_KEY=csk-...
+# CEREBRAS_MODEL=llama3.1-8b
+
 # ── Optional (defaults work fine) ─────────────────────────────────────────────
-CEREBRAS_MODEL=llama3.1-8b
 GCP_REGION=us-central1           # DO NOT change — Vertex AI VS v2 only in us-central1
 VERTEX_AI_VS_COLLECTION=dora-analyst-docs
 NEO4J_URI=bolt://localhost:7687
 NEO4J_USER=neo4j
+LLAMA_PARSE_ENABLED=false        # true to enable clause-friendly parsing (slower)
+GAP_CONCURRENCY=4                # try 2/4/6 with benchmark-gap-speed
+GAP_BATCH_SIZE=2                 # evaluate close obligations in mini-batches
+RAG_CACHE_TTL_SEC=180            # short-lived retrieval cache
+FINDING_CACHE_TTL_SEC=300        # short-lived finding cache
+OBLIGATION_PREFILTER_ENABLED=true
 ```
 
 **Never commit `.env`** — it is in `.gitignore`.
@@ -140,7 +157,7 @@ make dev
 
 On startup the server:
 1. Connects to Neo4j and applies constraints/indexes
-2. Creates the LLM (Cerebras `llama3.1-8b`)
+2. Creates the LLM (provider from `LLM_PROVIDER`, default Gemini)
 3. Creates Gemini Embedding 2 (768-dim)
 4. Connects to Vertex AI Vector Search collection `dora-analyst-docs`
 5. Creates the `ContractIngestionWorkflow` instance
@@ -433,7 +450,7 @@ Error: 403 PERMISSION_DENIED on Vertex AI
 
 Check `GET /api/jobs/{job_id}` — if status is `error`, the `error` field has the message.
 Common causes:
-- Cerebras 429 (rate limit) — retry waits up to 5 min automatically
+- Provider 429 (rate limit) — retry waits up to 5 min automatically
 - Vertex AI quota exceeded — wait and retry
 - PDF is scanned/image-only — PyMuPDF extracts no text; use LlamaParse
 
@@ -455,12 +472,7 @@ Both are local-dev defaults only. Change `NEO4J_PASSWORD` in `.env` and in the
 
 ---
 
-## 15. Cerebras model limits
+## 15. LLM provider notes
 
-| Model | Context | RPM | Best for |
-|-------|---------|-----|---------|
-| `llama3.1-8b` | 8 192 | 100 | Gap analysis (12 calls/run), remediation, reports |
-| `qwen-3-235b-a22b-instruct-2507` | 65 536 | 5 | Not currently used — 429s under load |
-
-The app uses `llama3.1-8b` for everything. Contract text is truncated to 6 000 chars
-for extraction. To switch models, set `CEREBRAS_MODEL=<model>` in `.env`.
+- For demo reliability, prefer `LLM_PROVIDER=gemini` with `GEMINI_LLM_MODEL=gemini-2.5-flash`.
+- If you switch to Cerebras, reduce obligation concurrency or prompt size to avoid TPM 429 spikes.

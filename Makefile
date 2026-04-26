@@ -1,4 +1,4 @@
-.PHONY: dev test lint fmt seed-dora seed-demo demo reset-graph neo4j-up neo4j-down smoke pipeline frontend
+.PHONY: dev test lint fmt seed-dora seed-demo demo reset-graph neo4j-up neo4j-down smoke pipeline frontend eval-rag rag-fast benchmark-gap-speed
 
 # ── Dev server ────────────────────────────────────────────────────────────────
 dev:
@@ -13,6 +13,15 @@ smoke:
 
 pipeline:
 	uv run python scripts/test_pipeline.py
+
+eval-rag:
+	uv run python scripts/eval_retrieval_with_judge.py --question "What are audit rights obligations in this contract?" --top-k 8 --contract-id demo-aws-001
+
+rag-fast:
+	uv run python scripts/eval_retrieval_with_judge.py --batch-critical --top-k 6 --contract-id demo-aws-001
+
+benchmark-gap-speed:
+	uv run python scripts/benchmark_gap_speed.py --contract-id demo-aws-001 --concurrency 2 4 6 --fast-mode
 
 frontend:
 	cd frontend && npm run dev

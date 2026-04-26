@@ -24,13 +24,23 @@ log = structlog.get_logger()
 class ContractIngestionWorkflow(Workflow):
     """End-to-end contract ingest: PDF → VS index → extraction → graph → scoring."""
 
-    def __init__(self, llm, embed_model, vector_store, neo4j_driver, llama_parse_api_key=None, **kwargs):
+    def __init__(
+        self,
+        llm,
+        embed_model,
+        vector_store,
+        neo4j_driver,
+        llama_parse_api_key=None,
+        use_llamaparse: bool = False,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self._llm = llm
         self._embed_model = embed_model
         self._vector_store = vector_store
         self._neo4j = neo4j_driver
         self._llama_parse_api_key = llama_parse_api_key
+        self._use_llamaparse = use_llamaparse
 
     @step
     async def parse_and_index(self, ev: StartEvent) -> DocParsedEvent:
@@ -38,7 +48,7 @@ class ContractIngestionWorkflow(Workflow):
         contract_id: str = ev.get("contract_id")
 
         # Parse PDF to pages
-        pages = parse_pdf(file_bytes, self._llama_parse_api_key)
+        pages = parse_pdf(file_bytes, self._llama_parse_api_key, use_llamaparse=self._use_llamaparse)
         full_text = "\n\n".join(p["text"] for p in pages)
 
         # Embed + upsert into Vertex AI VS
@@ -50,6 +60,7 @@ class ContractIngestionWorkflow(Workflow):
             embed_model=self._embed_model,
             contract_id=contract_id,
             llama_parse_api_key=self._llama_parse_api_key,
+            use_llamaparse=self._use_llamaparse,
         )
 
         log.info("workflow_parsed_and_indexed", contract_id=contract_id, nodes=len(node_ids))

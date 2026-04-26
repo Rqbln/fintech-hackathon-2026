@@ -1,10 +1,12 @@
 """Parse PDF → chunk → embed → upsert into Vertex AI Vector Search v2."""
 
 import hashlib
+import tempfile
 from typing import Any
 
 import structlog
 import pymupdf  # PyMuPDF
+from llama_parse import LlamaParse
 from llama_index.core import Document
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SentenceSplitter
@@ -28,16 +30,31 @@ def _parse_pdf_pymupdf(file_bytes: bytes) -> list[dict[str, Any]]:
 
 
 def _parse_pdf_llamaparse(file_bytes: bytes, api_key: str) -> list[dict[str, Any]]:
-    # TODO(Phase 1 polish): async LlamaParse call; currently falls back to PyMuPDF
-    raise NotImplementedError("LlamaParse parsing not yet implemented")
+    parser = LlamaParse(api_key=api_key, result_type="markdown", verbose=False)
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=True) as tmp:
+        tmp.write(file_bytes)
+        tmp.flush()
+        docs = parser.load_data(tmp.name)
+
+    pages: list[dict[str, Any]] = []
+    for i, doc in enumerate(docs):
+        text = (getattr(doc, "text", "") or "").strip()
+        if text:
+            pages.append({"page": i + 1, "text": text})
+    return pages
 
 
-def parse_pdf(file_bytes: bytes, llama_parse_api_key: str | None) -> list[dict[str, Any]]:
+def parse_pdf(
+    file_bytes: bytes,
+    llama_parse_api_key: str | None,
+    use_llamaparse: bool = False,
+) -> list[dict[str, Any]]:
     """Parse PDF. Uses LlamaParse if key is set, else PyMuPDF."""
-    if llama_parse_api_key:
+    if use_llamaparse and llama_parse_api_key:
         try:
             return _parse_pdf_llamaparse(file_bytes, llama_parse_api_key)
-        except NotImplementedError:
+        except Exception as exc:
+            log.warning("llamaparse_failed_fallback_pymupdf", error=str(exc)[:200])
             pass
     return _parse_pdf_pymupdf(file_bytes)
 
@@ -69,13 +86,14 @@ async def ingest_pdf(
     embed_model,
     contract_id: str | None = None,
     llama_parse_api_key: str | None = None,
+    use_llamaparse: bool = False,
 ) -> list[str]:
     """Parse, chunk, embed, and upsert one PDF. Returns list of upserted node IDs."""
     # Persist PDF for citation viewer
     if doc_type == "contract" and contract_id:
         save_contract_pdf(contract_id, file_bytes)
 
-    pages = parse_pdf(file_bytes, llama_parse_api_key)
+    pages = parse_pdf(file_bytes, llama_parse_api_key, use_llamaparse=use_llamaparse)
     log.info("pdf_parsed", document_id=document_id, pages=len(pages))
 
     base_metadata: dict[str, Any] = {"document_id": document_id, "doc_type": doc_type}
