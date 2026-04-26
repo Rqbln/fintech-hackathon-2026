@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 export function scoreToColor(score: number): string {
   if (score > 0.7) return "#ef4444";   // red — critical
   if (score > 0.4) return "#f59e0b";   // amber — high
-  if (score > 0.2) return "#6366f1";   // indigo — medium
+  if (score > 0.2) return "#2563eb";   // blue-600 — medium (not purple)
   return "#94a3b8";                     // slate — low
 }
 

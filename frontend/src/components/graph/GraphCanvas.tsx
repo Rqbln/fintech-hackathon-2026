@@ -92,7 +92,7 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
           label: attributes.label,
           // "arrow" type uses EdgeArrowProgram — shows direction
           type: isDepends ? "arrow" : "line",
-          color: isDepends ? "#f59e0baa" : "#94a3b866",
+          color: isDepends ? "#d97706dd" : "#64748baa",
           size: isDepends ? 2.5 : 1.2,
         });
       }
@@ -105,7 +105,7 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
         if (!graph.hasEdge(edgeKey)) {
           graph.addEdgeWithKey(edgeKey, BANK_KEY, key, {
             type: "line",
-            color: "#94a3b855",   // slate-400 — visible but subtle on white
+            color: "#64748b88",   // slate-500 at 53% — visible but thin on white
             size: 0.8,
             label: "",
           });
@@ -217,7 +217,7 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
     renderer.setSetting("edgeReducer", (edge, edgeData) => {
       if (!selectedNode) return edgeData;
       if (graph.hasExtremity(edge, selectedNode)) {
-        return { ...edgeData, size: (edgeData.size ?? 1) * 2.8, color: "#6366f1aa", zIndex: 5 };
+        return { ...edgeData, size: (edgeData.size ?? 1) * 2.8, color: "#2563ebcc", zIndex: 5 };
       }
       return { ...edgeData, color: "#e2e8f0", size: 0.3, zIndex: 0 };
     });

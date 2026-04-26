@@ -257,7 +257,7 @@ export default function GraphPage() {
             {[
               { color: "#ef4444", label: "Critical vendor" },
               { color: "#f59e0b", label: "High risk vendor" },
-              { color: "#6366f1", label: "Vendor" },
+              { color: "#2563eb", label: "Vendor" },
               { color: "#22d3ee", label: "Service" },
               { color: "#0f172a", label: "Your bank" },
             ].map(({ color, label }) => (
