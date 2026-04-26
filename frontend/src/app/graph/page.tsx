@@ -45,10 +45,18 @@ export default function GraphPage() {
   const [exportLoading, setExportLoading] = useState(false);
   const [lastSessionId, setLastSessionId] = useState<string | null>(null);
   const [showPortfolio, setShowPortfolio] = useState(false);
-  const [complianceColors, setComplianceColors] = useState<Record<string, string>>({});
+  const [complianceColors, setComplianceColors] = useState<Record<string, string>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("dora_compliance_colors") ?? "{}");
+    } catch { return {}; }
+  });
 
   const handleComplianceReady = useCallback((vendorKey: string, color: string) => {
-    setComplianceColors((prev) => ({ ...prev, [vendorKey]: color }));
+    setComplianceColors((prev) => {
+      const next = { ...prev, [vendorKey]: color };
+      localStorage.setItem("dora_compliance_colors", JSON.stringify(next));
+      return next;
+    });
   }, []);
 
   // Load graph on mount
