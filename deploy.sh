@@ -9,42 +9,37 @@ FRONTEND_SVC=dora-frontend
 BACKEND_IMAGE="gcr.io/$PROJECT/$BACKEND_SVC"
 FRONTEND_IMAGE="gcr.io/$PROJECT/$FRONTEND_SVC"
 
-# Load secrets from .env (skip comments and empty lines)
+# Load secrets from .env
 source <(grep -v '^#' .env | grep -v '^$' | sed 's/^/export /')
 
+# ── Backend: build + push ────────────────────────────────────────────────────
 echo "🔨 Building backend image…"
 docker build -t "$BACKEND_IMAGE" .
 docker push "$BACKEND_IMAGE"
 
-echo "🚀 Deploying backend to Cloud Run…"
-gcloud run deploy "$BACKEND_SVC" \
-  --image "$BACKEND_IMAGE" \
+# Inject the real image URL into the Cloud Run YAML and deploy
+# (Neo4j runs as a sidecar — no external Neo4j account needed)
+echo "🚀 Deploying backend + Neo4j sidecar to Cloud Run…"
+sed \
+  -e "s|BACKEND_IMAGE_PLACEHOLDER|$BACKEND_IMAGE|g" \
+  -e "s|CEREBRAS_API_KEY_PLACEHOLDER|${CEREBRAS_API_KEY}|g" \
+  -e "s|GEMINI_API_KEY_PLACEHOLDER|${GEMINI_API_KEY}|g" \
+  cloud-run-backend.yaml | \
+  gcloud run services replace - \
+    --region "$REGION" \
+    --platform managed
+
+gcloud run services add-iam-policy-binding "$BACKEND_SVC" \
   --region "$REGION" \
-  --platform managed \
-  --allow-unauthenticated \
-  --memory 2Gi \
-  --cpu 2 \
-  --timeout 300 \
-  --set-env-vars "\
-LLM_PROVIDER=${LLM_PROVIDER:-cerebras},\
-CEREBRAS_API_KEY=${CEREBRAS_API_KEY},\
-CEREBRAS_MODEL=${CEREBRAS_MODEL:-llama3.1-8b},\
-GEMINI_API_KEY=${GEMINI_API_KEY},\
-GCP_PROJECT=${GCP_PROJECT},\
-GCP_REGION=${GCP_REGION:-us-central1},\
-GCS_BUCKET=${GCS_BUCKET},\
-VERTEX_AI_VS_COLLECTION=${VERTEX_AI_VS_COLLECTION:-dora-analyst-docs},\
-VERTEX_AI_VS_ENDPOINT_ID=${VERTEX_AI_VS_ENDPOINT_ID},\
-NEO4J_URI=${NEO4J_URI},\
-NEO4J_USER=${NEO4J_USER:-neo4j},\
-NEO4J_PASSWORD=${NEO4J_PASSWORD},\
-LOG_LEVEL=INFO"
+  --member="allUsers" \
+  --role="roles/run.invoker" 2>/dev/null || true
 
 BACKEND_URL=$(gcloud run services describe "$BACKEND_SVC" \
   --region "$REGION" \
   --format "value(status.url)")
 echo "✅ Backend: $BACKEND_URL"
 
+# ── Frontend: build + push + deploy ──────────────────────────────────────────
 echo "🔨 Building frontend image (BACKEND_URL=$BACKEND_URL)…"
 docker build \
   --build-arg BACKEND_URL="$BACKEND_URL" \

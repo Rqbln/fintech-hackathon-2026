@@ -1,0 +1,78 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: dora-backend
+  annotations:
+    run.googleapis.com/launch-stage: GA
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/startup-cpu-boost: "true"
+    spec:
+      containerConcurrency: 8
+      timeoutSeconds: 300
+
+      containers:
+        # ── Ingress: FastAPI backend ──────────────────────────────────────────
+        - name: backend
+          image: BACKEND_IMAGE_PLACEHOLDER
+          ports:
+            - name: http1
+              containerPort: 8000
+          resources:
+            limits:
+              memory: 2Gi
+              cpu: "2"
+          env:
+            - name: LLM_PROVIDER
+              value: "cerebras"
+            - name: CEREBRAS_API_KEY
+              value: "CEREBRAS_API_KEY_PLACEHOLDER"
+            - name: CEREBRAS_MODEL
+              value: "llama3.1-8b"
+            - name: GEMINI_API_KEY
+              value: "GEMINI_API_KEY_PLACEHOLDER"
+            - name: GCP_PROJECT
+              value: "gen-lang-client-0704112831"
+            - name: GCP_REGION
+              value: "us-central1"
+            - name: GCS_BUCKET
+              value: "dora-analyst-docs"
+            - name: VERTEX_AI_VS_COLLECTION
+              value: "dora-analyst-docs"
+            - name: NEO4J_URI
+              value: "bolt://localhost:7687"
+            - name: NEO4J_USER
+              value: "neo4j"
+            - name: NEO4J_PASSWORD
+              value: "password123"
+            - name: LOG_LEVEL
+              value: "INFO"
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            failureThreshold: 20
+
+        # ── Sidecar: Neo4j (localhost:7687) ───────────────────────────────────
+        - name: neo4j
+          image: neo4j:5.26-community
+          resources:
+            limits:
+              memory: 1Gi
+              cpu: "1"
+          env:
+            - name: NEO4J_AUTH
+              value: "neo4j/password123"
+            - name: NEO4J_server_memory_heap_initial__size
+              value: "256m"
+            - name: NEO4J_server_memory_heap_max__size
+              value: "512m"
+            - name: NEO4J_server_memory_pagecache_size
+              value: "128m"
+            - name: NEO4J_server_default__listen__address
+              value: "0.0.0.0"
