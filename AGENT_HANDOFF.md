@@ -1,4 +1,7 @@
-# DORA AI Analyst — Agent Handoff Report
+# DORA AI Analyst - Agent Handoff Report
+
+> Archived handoff notes from an earlier implementation phase.  
+> For final run/deploy instructions, use `README.md` and `HOWTO.md`.
 
 **Date:** 2026-04-25  
 **Repo root:** `/home/kepard/dev/hec-hackathon`  

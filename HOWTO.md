@@ -1,507 +1,134 @@
-# DORA AI Analyst — Developer Guide
+# Shipper - Developer Guide
 
-AI-powered DORA (EU 2022/2554) compliance platform. Uploads vendor contracts,
-extracts structured data with citations, maps a dependency graph in Neo4j,
-runs gap analysis against 12 DORA Art.30 obligations, and proposes EU-sovereign
-remediation paths.
+This guide is the operational reference for local development, demo runs, and Cloud Run deployment.
 
----
+## 1) Prerequisites
 
-## Prerequisites
+- Python 3.13+
+- `uv`
+- Node.js 20+
+- Docker
+- GCP project with billing enabled
+- `gcloud` CLI authenticated
 
-| Tool | Version | Install |
-|------|---------|---------|
-| Python | 3.13+ | `pyenv install 3.13` |
-| uv | latest | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
-| Docker | any | [docker.com](https://docs.docker.com/get-docker/) |
-| GCP account | — | with billing enabled |
-| `gcloud` CLI | latest | `brew install google-cloud-sdk` |
-
----
-
-## 1. Clone and install
+## 2) Local setup
 
 ```bash
 git clone https://github.com/Rqbln/fintech-hackathon-2026
 cd fintech-hackathon-2026
-git checkout bogdan
 
-# Install all dependencies (creates .venv automatically)
-uv sync
-```
-
----
-
-## 2. Environment variables
-
-Copy the example and fill in your keys:
-
-```bash
 cp .env.example .env
+uv sync
+cd frontend && npm install && cd ..
 ```
 
-Edit `.env`:
+Minimal `.env` to run end-to-end:
+- `LLM_PROVIDER=gemini`
+- `GEMINI_API_KEY=...`
+- `GCP_PROJECT=...`
+- `GCS_BUCKET_CONTRAT=...`
+- `GCS_BUCKET_DORA=...`
+- `NEO4J_PASSWORD=...`
 
-```env
-# ── Required ──────────────────────────────────────────────────────────────────
-LLM_PROVIDER=gemini               # recommended for demo stability/latency
-GEMINI_LLM_MODEL=gemini-2.5-flash
-FAST_MODE=true                    # demo acceleration mode
-GEMINI_API_KEY=AIza...            # https://aistudio.google.com → Get API key
-GCP_PROJECT=your-project-id      # gcloud projects list
-GCS_BUCKET_CONTRAT=your-contract-bucket-name  # preferred for vendor contracts
-GCS_BUCKET_DORA=your-dora-bucket-name         # preferred for DORA corpus
-GCS_DORA_OBJECT=dora/dora_regulation.pdf      # optional explicit object path
-NEO4J_PASSWORD=your-password     # any string for local dev
+## 3) Run locally
 
-# Backward compatibility:
-# GCS_BUCKET=your-bucket-name     # used if *_CONTRAT/*_DORA are not set
-
-# Optional if you want to use Cerebras instead of Gemini:
-# LLM_PROVIDER=cerebras
-# CEREBRAS_API_KEY=csk-...
-# CEREBRAS_MODEL=llama3.1-8b
-
-# ── Optional (defaults work fine) ─────────────────────────────────────────────
-GCP_REGION=us-central1           # DO NOT change — Vertex AI VS v2 only in us-central1
-VERTEX_AI_VS_COLLECTION=dora-analyst-docs
-NEO4J_URI=bolt://localhost:7687
-NEO4J_USER=neo4j
-LLAMA_PARSE_ENABLED=false        # true to enable clause-friendly parsing (slower)
-GAP_CONCURRENCY=4                # try 2/4/6 with benchmark-gap-speed
-GAP_BATCH_SIZE=2                 # evaluate close obligations in mini-batches
-RAG_CACHE_TTL_SEC=180            # short-lived retrieval cache
-FINDING_CACHE_TTL_SEC=300        # short-lived finding cache
-OBLIGATION_PREFILTER_ENABLED=true
-```
-
-**Never commit `.env`** — it is in `.gitignore`.
-
----
-
-## 3. GCP setup
-
-### 3a. Authenticate
+Start Neo4j:
 
 ```bash
-gcloud auth application-default login
-gcloud config set project YOUR_PROJECT_ID
-```
-
-### 3b. Enable APIs
-
-```bash
-gcloud services enable \
-  aiplatform.googleapis.com \
-  storage.googleapis.com \
-  vectorsearch.googleapis.com
-```
-
-### 3c. Create GCS bucket (if it doesn't exist)
-
-```bash
-gsutil mb -l us-central1 gs://YOUR_BUCKET_NAME
-```
-
-### 3d. Billing
-
-Vertex AI Vector Search v2 requires a billing account. Link one:
-
-```bash
-gcloud billing projects link YOUR_PROJECT_ID \
-  --billing-account=YOUR_BILLING_ACCOUNT_ID
-# Find billing accounts: gcloud billing accounts list
-```
-
----
-
-## 4. Start Neo4j
-
-```bash
-# Requires Docker and user in the docker group
-sudo usermod -aG docker $USER && newgrp docker   # first time only
-
 make neo4j-up
-# Neo4j browser: http://localhost:7474 (user: neo4j, pass: from .env)
 ```
 
----
-
-## 5. Seed DORA regulation
-
-Downloads the official DORA PDF and indexes 178 chunks into Vertex AI Vector Search.
-Run once — the result is cached:
-
-```bash
-make seed-dora
-# Or: uv run python scripts/seed_dora.py
-```
-
-Expected output:
-```
-Downloading DORA PDF…
-pdf_parsed  pages=74
-pdf_indexed nodes=178
-✓ DORA seeded
-```
-
----
-
-## 6. Start the API server
+Start backend:
 
 ```bash
 make dev
-# → http://localhost:8000        (test UI)
-# → http://localhost:8000/docs   (Swagger)
 ```
 
-On startup the server:
-1. Connects to Neo4j and applies constraints/indexes
-2. Creates the LLM (provider from `LLM_PROVIDER`, default Gemini)
-3. Creates Gemini Embedding 2 (768-dim)
-4. Connects to Vertex AI Vector Search collection `dora-analyst-docs`
-5. Creates the `ContractIngestionWorkflow` instance
-
-If startup fails with `degraded` status at `/health`, check:
-- Neo4j is running (`make neo4j-up`)
-- All `.env` keys are set
-- `gcloud auth application-default login` was run
-
----
-
-## 7. Demo: seed and test the pipeline
+Start frontend (new terminal):
 
 ```bash
-# Ingest the demo AWS contract through the full AI pipeline
-make seed-demo
-# → prints extraction results, graph nodes, risk scores
-
-# Run full 6-step integration test
-make pipeline
+cd frontend
+npm run dev
 ```
 
----
+Endpoints:
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:8000`
+- OpenAPI: `http://localhost:8000/docs`
+- Health: `http://localhost:8000/health`
 
-## 8. Test UI walkthrough
-
-Open **http://localhost:8000** in your browser.
-
-### Status tab
-- Click **Refresh** — all badges should be green.
-- Session state (bottom) updates automatically as you work.
-
-### Ingest tab
-
-1. **Seed DORA** — click once, wait for `already_ingested` or `ingested` response.
-2. **Upload contract** — select a PDF, optionally set a Contract ID, click **Upload & Analyse**.
-   - Returns a `job_id` immediately.
-   - The UI polls every 2 seconds until the pipeline finishes (~30–90 s).
-   - On success, vendor name + criticality score appear in the session state bar.
-   - Gap Analysis form is pre-filled with `contract_id` and `vendor_name`.
-3. **Concentration ranking** — click **Load** to see all vendors sorted by risk score.
-
-### Graph tab
-
-- Leave root vendor blank → full graph.
-- Type `AWS` (or any vendor name) → subgraph.
-- Nodes are **sized by criticality score** and **coloured by type**:
-  - Purple = Vendor, Cyan = Service, Green = Contract, Red = DORAObligation
-- Hover a node for tooltip (type, score, country).
-
-### Gap Analysis tab
-
-1. Fill in **Contract ID**, **Vendor name**, and paste the contract text (first 3000 chars minimum).
-2. Optionally restrict to specific obligations (e.g. `DORA-Art30-2-a, DORA-Art30-2-b`).
-3. Click **Run Gap Analysis** — takes 60–180 s (12 sequential LLM calls).
-4. Results appear inline: findings with verdict badges (met / partial / unmet),
-   evidence quotes, and remediation proposals with EU-sovereign alternatives.
-
-### Report tab
-
-- Paste a **Session ID** (shown after gap analysis or in Sessions tab).
-- **JSON** button → full `ReportArtifact` JSON.
-- **Markdown** button → formatted audit report, copyable.
-
-### Sessions tab
-
-Lists every gap analysis run with risk level and obligation counts.
-Click **View** to jump directly to its report.
-
-### Jobs tab
-
-Lists every ingest job with status (running / done / error), vendor name, and score.
-Useful for debugging failed uploads.
-
----
-
-## 9. API reference
-
-Full interactive docs at **http://localhost:8000/docs**.
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/health` | Health check — Neo4j, keys, VS |
-| `POST` | `/api/ingest/dora?force=false` | Seed DORA regulation (idempotent) |
-| `POST` | `/api/ingest?contract_id=X` | Upload contract PDF → `{job_id}` |
-| `GET` | `/api/jobs/{job_id}` | Poll pipeline job status |
-| `GET` | `/api/jobs` | List all jobs |
-| `GET` | `/api/graph?root_vendor=AWS&depth=2` | Sigma.js graph JSON |
-| `GET` | `/api/graph/concentration` | Vendors by criticality score |
-| `POST` | `/api/gap-analysis` | Run DORA gap analysis |
-| `POST` | `/api/remediation` | Re-run remediation for a session |
-| `GET` | `/api/report/{session_id}` | JSON report |
-| `GET` | `/api/report/{session_id}/markdown` | Markdown report |
-| `GET` | `/api/sessions` | List all sessions |
-| `GET` | `/api/sessions/{id}/trace` | Full report for session |
-
-### Example: upload a contract
+## 4) Local maintenance commands
 
 ```bash
-curl -X POST http://localhost:8000/api/ingest \
-  -F "file=@contract.pdf" \
-  -F "contract_id=my-contract-001"
-# → {"job_id": "a1b2c3d4", "status": "running", "contract_id": "my-contract-001"}
-
-# Poll until done
-curl http://localhost:8000/api/jobs/a1b2c3d4
-# → {"status": "done", "result": {"vendor_name": "AWS", "criticality_score": 0.45, ...}}
+make reset-graph      # wipe neo4j graph + reapply schema
+make seed-dora        # seed/index dora corpus
+make seed-demo        # ingest demo contract through full pipeline
+make pipeline         # integration pipeline run
+make neo4j-down       # stop local neo4j
 ```
 
-### Example: gap analysis
+## 5) API quick reference
 
-```bash
-curl -X POST http://localhost:8000/api/gap-analysis \
-  -H "Content-Type: application/json" \
-  -d '{
-    "contract_ids": ["my-contract-001"],
-    "vendor_name": "AWS",
-    "contract_text_preview": "1. SCOPE OF SERVICES\nAWS shall provide...",
-    "obligation_ids": ["DORA-Art30-2-a", "DORA-Art30-2-b"]
-  }'
-```
+- `POST /api/ingest` - upload vendor contract (returns job id)
+- `GET /api/jobs/{job_id}` - poll ingestion
+- `GET /api/graph` - fetch supply-chain graph
+- `POST /api/gap-analysis-stream` - stream findings/progress via SSE
+- `GET /api/sessions` - list sessions
+- `GET /api/sessions/{session_id}/trace` - full stored report
+- `GET /api/report/{session_id}` - report JSON
+- `POST /api/report/{session_id}/compliant-draft.pdf` - generate compliant PDF
 
----
+## 6) Cloud Run deployment (current naming)
 
-## 10. Running tests
+Services:
+- `shipper-backend`
+- `shipper-frontend`
 
-```bash
-# Unit tests (no external deps — always fast)
-uv run pytest tests/unit/ -v          # 49 tests
+Artifact repo:
+- `shipper`
 
-# Smoke test (needs live Cerebras + Gemini + VS)
-make smoke
-
-# Full pipeline integration test (needs all deps + Neo4j)
-make pipeline
-```
-
----
-
-## 11. Makefile targets
-
-```
-make dev           Start API server with hot-reload
-make test          Run all tests
-make test-unit     Unit tests only
-make smoke         LLM + embeddings + RAG smoke test
-make pipeline      Full 6-step integration test
-make neo4j-up      Start Neo4j in Docker
-make neo4j-down    Stop Neo4j
-make seed-dora     Index DORA regulation into Vector Search
-make seed-demo     Ingest demo AWS contract (full pipeline)
-make reset-graph   Wipe Neo4j + re-apply schema
-make lint          ruff check
-make fmt           ruff format
-```
-
----
-
-## 12. Project structure
-
-```
-app/
-├── main.py                    # FastAPI app + lifespan (startup)
-├── config.py                  # All settings (pydantic-settings, reads .env)
-├── deps.py                    # FastAPI dependency providers
-├── jobs.py                    # In-memory ingest job store
-├── sessions.py                # In-memory session/report store
-├── agents/
-│   ├── ingestion.py           # ContractIngestionWorkflow (4 steps)
-│   ├── extraction.py          # ExtractionAgent: contract text → ContractExtraction
-│   ├── graph_builder.py       # GraphBuilderAgent: upserts into Neo4j
-│   ├── risk_scorer.py         # RiskScorer: recomputes criticality_score
-│   ├── gap_analysis.py        # GapAnalysisAgent: 12 DORA obligations → findings
-│   ├── remediation.py         # RemediationAgent: findings → EU alternatives
-│   ├── report_assembler.py    # ReportAssembler: findings + proposals → report
-│   └── events.py              # LlamaIndex Workflow event types
-├── api/
-│   ├── ingest.py              # POST /api/ingest (async job)
-│   ├── graph.py               # GET /api/graph
-│   ├── analysis.py            # POST /api/gap-analysis
-│   ├── remediation.py         # POST /api/remediation
-│   ├── report.py              # GET /api/report/{id}
-│   └── sessions.py            # GET /api/sessions
-├── graph/
-│   ├── client.py              # run_read / run_write wrappers
-│   ├── schema.py              # Cypher constraints + indexes
-│   ├── upsert.py              # Idempotent MERGE statements
-│   ├── queries.py             # Graph read queries (Sigma.js shapes)
-│   └── resolver.py            # Entity resolution (fuzzy vendor dedup)
-├── llm/
-│   ├── client.py              # make_llm() — Cerebras via OpenAILike
-│   ├── embeddings.py          # make_embed_model() — Gemini Embedding 2
-│   └── retry.py               # chat_with_retry() — exponential backoff on 429
-├── rag/
-│   ├── store.py               # Vertex AI VS v2 collection setup
-│   ├── ingestion_pipeline.py  # PDF → chunks → embed → VS
-│   └── citation_query.py      # CitationQueryEngine wrapper
-├── schemas/                   # Pydantic models (single source of truth)
-│   ├── contract.py            # ContractExtraction, EvidenceSpan, ServiceClause
-│   ├── obligation.py          # ObligationFinding, Verdict
-│   ├── graph.py               # GraphNode, GraphEdge, GraphResponse
-│   ├── remediation.py         # RemediationProposal, AlternativeVendor
-│   └── report.py              # ReportArtifact
-├── data/
-│   ├── dora_obligations.yaml  # 12 DORA Art.30 obligations (ground truth)
-│   └── sovereign_alternatives.yaml  # EU sovereign alternatives per vendor
-├── static/
-│   └── index.html             # Test UI (vanilla JS + vis.js)
-└── tracing/
-    └── logger.py              # structlog JSON configuration
-
-scripts/
-├── seed_dora.py               # Download + index DORA PDF
-├── seed_demo_contracts.py     # Ingest demo AWS contract (full pipeline)
-├── reset_neo4j.py             # Wipe graph + re-apply schema
-├── test_smoke.py              # Quick LLM/embed/RAG sanity check
-└── test_pipeline.py           # End-to-end 6-step integration test
-
-tests/
-├── unit/                      # 49 fast tests, no external deps
-└── fixtures/
-    ├── dora_regulation.pdf    # DORA EU 2022/2554 (downloaded by seed_dora.py)
-    └── demo_aws_contract.txt  # Fictitious AWS contract for demo
-```
-
----
-
-## 13. Key data models
-
-### ContractExtraction (output of ExtractionAgent)
-```python
-ContractExtraction(
-    contract_id="my-contract-001",
-    vendor_name="Amazon Web Services EMEA SARL",
-    vendor_country="LU",
-    services=[ServiceClause(service_name="Amazon EC2", sla_hours=4.0)],
-    covered_obligation_ids=["DORA-Art30-2-a", "DORA-Art30-2-b"],
-    evidence_spans=[EvidenceSpan(text="All data stored in EU regions", page=3, ...)],
-    sub_vendors=["Equinix", "Lumen Technologies"],
-)
-```
-
-### ObligationFinding (output of GapAnalysisAgent)
-```python
-ObligationFinding(
-    obligation_id="DORA-Art30-2-b",
-    article="30", paragraph="2b",
-    verdict=Verdict.PARTIALLY_MET,
-    rationale="Clause 3 names EU regions but lacks change notification.",
-    gap_description="Missing notification obligation for location changes.",
-    risk_level="high",
-    evidence_spans=[...],
-)
-```
-
-### Neo4j graph schema
-```
-(:Vendor)          -[:PROVIDES]->   (:Service)
-(:Contract)        -[:COVERS]->     (:Vendor)
-(:Contract)        -[:EVIDENCES]->  (:DORAObligation)
-(:Vendor)          -[:DEPENDS_ON]-> (:Vendor)   # 4th-party chains
-```
-
-Node properties on `:Vendor`:
-- `criticality_score` ∈ [0, 1] — drives node size in graph
-- Computed from: `contracts×0.3 + services×0.3 + dependents×0.2 + country_risk×0.2`
-
----
-
-## 14. Common issues
-
-### `make dev` fails at startup
-
-```
-Error: neo4j connection refused
-```
-→ Run `make neo4j-up` and wait 10 s for Neo4j to initialise.
-
-```
-Error: google.auth.exceptions.DefaultCredentialsError
-```
-→ Run `gcloud auth application-default login`.
-
-```
-Error: 403 PERMISSION_DENIED on Vertex AI
-```
-→ Billing not enabled. Run: `gcloud billing projects link PROJECT_ID --billing-account=ACCOUNT_ID`
-
-### Ingest job stays `running` forever
-
-Check `GET /api/jobs/{job_id}` — if status is `error`, the `error` field has the message.
-Common causes:
-- Provider 429 (rate limit) — retry waits up to 5 min automatically
-- Vertex AI quota exceeded — wait and retry
-- PDF is scanned/image-only — PyMuPDF extracts no text; use LlamaParse
-
-### Graph is empty after ingest
-
-The graph is only populated by the full `ContractIngestionWorkflow`.
-If you ingested via a direct `POST /api/ingest/dora` call, it skips extraction/graph.
-Use `POST /api/ingest` with a vendor contract PDF instead.
-
-### Gap analysis returns all `unknown` verdicts
-
-The LLM parse failed silently. Check logs for `gap_analysis_json_failed`.
-Paste more contract text in `contract_text_preview` (aim for 2000+ chars covering key clauses).
-
-### `password123` in docker-compose / .env.example
-
-Both are local-dev defaults only. Change `NEO4J_PASSWORD` in `.env` and in the
-`docker-compose.yml` `NEO4J_AUTH` line if you expose Neo4j outside localhost.
-
----
-
-## 15. LLM provider notes
-
-- For demo reliability, prefer `LLM_PROVIDER=gemini` with `GEMINI_LLM_MODEL=gemini-2.5-flash`.
-- If you switch to Cerebras, reduce obligation concurrency or prompt size to avoid TPM 429 spikes.
-
----
-
-## 16. Deploy on GCP with Docker + Cloud Run
-
-The repo now includes:
-- `Dockerfile` (backend FastAPI)
-- `frontend/Dockerfile` (Next.js frontend)
-- `cloudbuild.yaml` (build + push + deploy both services)
-
-### One-command deployment
+### Full deploy
 
 ```bash
 gcloud builds submit --config cloudbuild.yaml \
-  --substitutions=_REGION=europe-west1,_REPO=regagent,_BACKEND_SERVICE=regagent-backend,_FRONTEND_SERVICE=regagent-frontend
+  --substitutions _GEMINI_API_KEY=YOUR_GEMINI_API_KEY,_NEO4J_URI=YOUR_NEO4J_URI,_NEO4J_USER=YOUR_NEO4J_USER,_NEO4J_PASSWORD=YOUR_NEO4J_PASSWORD
 ```
 
-### Required runtime env vars (backend service)
-
-After first deploy, set backend env vars on Cloud Run:
+### Frontend-only deploy
 
 ```bash
-gcloud run services update regagent-backend --region europe-west1 \
-  --set-env-vars="LLM_PROVIDER=gemini,GEMINI_LLM_MODEL=gemini-2.5-flash,GCP_PROJECT=YOUR_PROJECT_ID,GCS_BUCKET_CONTRAT=YOUR_CONTRACT_BUCKET,GCS_BUCKET_DORA=YOUR_DORA_BUCKET,GCS_DORA_OBJECT=dora/dora_regulation.pdf,NEO4J_URI=YOUR_NEO4J_URI,NEO4J_USER=neo4j,NEO4J_PASSWORD=YOUR_PASSWORD"
+gcloud builds submit --config cloudbuild.frontend.yaml \
+  --substitutions _BACKEND_API_BASE=https://shipper-backend-<project-number>.europe-west1.run.app
 ```
 
-Also set secrets (recommended) for:
-- `GEMINI_API_KEY`
-- any other provider key you use.
+### Public access (if needed)
+
+```bash
+gcloud run services add-iam-policy-binding shipper-frontend --region europe-west1 --member="allUsers" --role="roles/run.invoker"
+gcloud run services add-iam-policy-binding shipper-backend --region europe-west1 --member="allUsers" --role="roles/run.invoker"
+```
+
+## 7) Troubleshooting
+
+### Neo4j connection refused
+- Run `make neo4j-up`
+- Wait a few seconds and retry `make reset-graph` or backend startup
+
+### Ingest failed 500
+- Check backend logs first
+- Verify `.env` buckets/project/API key values
+- Verify contract PDF is valid and readable
+
+### Frontend uses old UI after deploy
+- Hard refresh browser (`Ctrl+Shift+R`)
+- Confirm URL is the latest `shipper-frontend` service URL
+
+### Cloud Build 404 on session trace
+- Usually stale `session_id` references after restart
+- Re-run a fresh analysis and retry
+
+## 8) Final demo recommendations
+
+- Use `LLM_PROVIDER=gemini` for stable latency
+- Keep backend min instances > 0 in Cloud Run for better responsiveness
+- Reset graph before demo if you need a clean storyline: `make reset-graph`
