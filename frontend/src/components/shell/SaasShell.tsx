@@ -10,7 +10,6 @@ import {
   Map,
   ScanText,
   Search,
-  Shield,
   UserCircle2,
   Wrench,
 } from "lucide-react";
@@ -52,11 +51,11 @@ export default function SaasShell({
     <div className="flex h-screen min-h-screen bg-[#f8f9ff]">
       <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white lg:flex lg:flex-col">
         <div className="flex items-center gap-3 border-b border-slate-200 px-5 py-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#131b2e] text-white">
-            <Shield size={15} />
+          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
+            <img src="/shipper-logo.png" alt="Shipper logo" className="h-full w-full object-cover" />
           </div>
           <div>
-            <p className="text-base font-bold text-slate-900">RegAgent</p>
+            <p className="text-base font-bold text-slate-900">Shipper</p>
             <p className="text-xs text-slate-500">Regulatory Intelligence</p>
           </div>
         </div>

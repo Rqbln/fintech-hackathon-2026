@@ -31,6 +31,7 @@ interface SupplyNodeData {
   risk: Risk;
   nodeType: NodeType;
   subtitle: string;
+  [key: string]: unknown;
 }
 
 const riskBadgeClass: Record<Risk, string> = {
@@ -120,46 +121,23 @@ function buildContractGraph(params: {
   const bankId = "bank::central";
   const contractNodeId = `contract::${contractId || "latest"}`;
 
-  const outgoing = new Map<string, string[]>();
   const incoming = new Map<string, number>();
-  for (const v of vendorNodes) outgoing.set(v.key, []);
+  const outgoing = new Map<string, string[]>();
   for (const v of vendorNodes) incoming.set(v.key, 0);
+  for (const v of vendorNodes) outgoing.set(v.key, []);
   for (const e of vendorEdges) {
     outgoing.get(e.source)?.push(e.target);
     incoming.set(e.target, (incoming.get(e.target) ?? 0) + 1);
   }
 
-  const depth = new Map<string, number>();
-  if (rootVendorId) {
-    const queue = [rootVendorId];
-    depth.set(rootVendorId, 0);
-    while (queue.length > 0) {
-      const current = queue.shift()!;
-      const currentDepth = depth.get(current) ?? 0;
-      for (const next of outgoing.get(current) ?? []) {
-        if (!depth.has(next)) {
-          depth.set(next, currentDepth + 1);
-          queue.push(next);
-        }
-      }
-    }
-  }
-  for (const v of vendorNodes) {
-    if (!depth.has(v.key)) depth.set(v.key, rootVendorId ? 1 : 0);
-  }
-
-  const byDepth = new Map<number, string[]>();
-  for (const [id, d] of depth.entries()) {
-    const arr = byDepth.get(d) ?? [];
-    arr.push(id);
-    byDepth.set(d, arr);
-  }
+  const centerX = 560;
+  const centerY = 330;
 
   const nodes: Node<SupplyNodeData>[] = [
     {
       id: bankId,
       type: "supplyChainNode",
-      position: { x: 130, y: 320 },
+      position: { x: centerX, y: centerY },
       data: {
         label: bankName,
         risk: "core",
@@ -170,7 +148,7 @@ function buildContractGraph(params: {
     {
       id: contractNodeId,
       type: "supplyChainNode",
-      position: { x: 470, y: 320 },
+      position: { x: centerX, y: centerY - 260 },
       data: {
         label: contractId || "Latest contract",
         risk: "core",
@@ -180,21 +158,23 @@ function buildContractGraph(params: {
     },
   ];
 
-  const xStart = 820;
-  const xStep = 300;
-  const yCenter = 320;
-  const yStep = 150;
+  const total = Math.max(vendorNodes.length, 1);
+  const radius = total <= 2 ? 320 : Math.min(430, 240 + total * 28);
+  const startAngle = -Math.PI / 2;
+  const sortedVendors = [...vendorNodes].sort((a, b) =>
+    a.attributes.label.localeCompare(b.attributes.label)
+  );
 
-  for (const n of vendorNodes) {
-    const d = depth.get(n.key) ?? 0;
-    const siblings = byDepth.get(d) ?? [n.key];
-    const siblingIndex = Math.max(0, siblings.indexOf(n.key));
-    const blockHeight = (siblings.length - 1) * yStep;
-    const y = yCenter - blockHeight / 2 + siblingIndex * yStep;
+  for (let i = 0; i < sortedVendors.length; i += 1) {
+    const n = sortedVendors[i];
+    const angle = startAngle + (2 * Math.PI * i) / total;
+    const x = centerX + Math.cos(angle) * radius;
+    const y = centerY + Math.sin(angle) * radius;
+    const outDegree = (outgoing.get(n.key) ?? []).length;
     nodes.push({
       id: n.key,
       type: "supplyChainNode",
-      position: { x: xStart + d * xStep, y },
+      position: { x, y },
       data: {
         label: n.attributes.label,
         risk: inferRisk(n, rootVendorId),
@@ -203,8 +183,10 @@ function buildContractGraph(params: {
           rootVendorId && n.key === rootVendorId
             ? "Fournisseur principal du contrat"
             : (incoming.get(n.key) ?? 0) > 0
-              ? `Sous-traitant (niveau ${Math.max(1, d)})`
-              : "Fournisseur mentionne dans le contrat",
+              ? `Sous-traitant (${incoming.get(n.key)} lien entrant)`
+              : outDegree > 0
+                ? "Fournisseur avec dependances"
+                : "Fournisseur mentionne dans le contrat",
       },
     });
   }

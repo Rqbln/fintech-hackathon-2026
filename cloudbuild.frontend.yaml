@@ -1,0 +1,41 @@
+substitutions:
+  _REGION: us-central1
+  _REPO: shipper
+  _FRONTEND_SERVICE: shipper-frontend
+  _BACKEND_API_BASE: http://localhost:8000
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    id: build-frontend
+    args:
+      [
+        "build",
+        "--build-arg",
+        "BACKEND_API_BASE=${_BACKEND_API_BASE}",
+        "-t",
+        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/frontend:$BUILD_ID",
+        "./frontend"
+      ]
+
+  - name: gcr.io/cloud-builders/docker
+    id: push-frontend
+    args:
+      [
+        "push",
+        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/frontend:$BUILD_ID"
+      ]
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    id: deploy-frontend
+    entrypoint: bash
+    args:
+      - -lc
+      - |
+        gcloud run deploy "${_FRONTEND_SERVICE}" \
+          --image "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/frontend:$BUILD_ID" \
+          --region "${_REGION}" \
+          --platform managed \
+          --allow-unauthenticated
+
+images:
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/frontend:$BUILD_ID"

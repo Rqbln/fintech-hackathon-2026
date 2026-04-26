@@ -1,0 +1,27 @@
+# Keep Cloud Build upload light and deterministic.
+.git
+.gitignore
+.cursor
+.cursorignore
+.venv
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Local runtime artifacts
+traces/
+terminals/
+agent-transcripts/
+mcps/
+
+# Heavy demo/reference assets not needed for container builds
+maquettes/
+tests/fixtures/
+
+# Frontend build cache/deps
+frontend/node_modules/
+frontend/.next/
+
+# Python caches
+.mypy_cache/

@@ -476,3 +476,32 @@ Both are local-dev defaults only. Change `NEO4J_PASSWORD` in `.env` and in the
 
 - For demo reliability, prefer `LLM_PROVIDER=gemini` with `GEMINI_LLM_MODEL=gemini-2.5-flash`.
 - If you switch to Cerebras, reduce obligation concurrency or prompt size to avoid TPM 429 spikes.
+
+---
+
+## 16. Deploy on GCP with Docker + Cloud Run
+
+The repo now includes:
+- `Dockerfile` (backend FastAPI)
+- `frontend/Dockerfile` (Next.js frontend)
+- `cloudbuild.yaml` (build + push + deploy both services)
+
+### One-command deployment
+
+```bash
+gcloud builds submit --config cloudbuild.yaml \
+  --substitutions=_REGION=europe-west1,_REPO=regagent,_BACKEND_SERVICE=regagent-backend,_FRONTEND_SERVICE=regagent-frontend
+```
+
+### Required runtime env vars (backend service)
+
+After first deploy, set backend env vars on Cloud Run:
+
+```bash
+gcloud run services update regagent-backend --region europe-west1 \
+  --set-env-vars="LLM_PROVIDER=gemini,GEMINI_LLM_MODEL=gemini-2.5-flash,GCP_PROJECT=YOUR_PROJECT_ID,GCS_BUCKET_CONTRAT=YOUR_CONTRACT_BUCKET,GCS_BUCKET_DORA=YOUR_DORA_BUCKET,GCS_DORA_OBJECT=dora/dora_regulation.pdf,NEO4J_URI=YOUR_NEO4J_URI,NEO4J_USER=neo4j,NEO4J_PASSWORD=YOUR_PASSWORD"
+```
+
+Also set secrets (recommended) for:
+- `GEMINI_API_KEY`
+- any other provider key you use.

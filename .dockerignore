@@ -1,0 +1,14 @@
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.cursor
+.cursorignore
+frontend/node_modules
+frontend/.next
+agent-transcripts
+mcps
+terminals
