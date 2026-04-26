@@ -204,19 +204,10 @@ export default function GraphPage() {
       </nav>
 
       {/* Main area */}
-      <div className="flex-1 relative overflow-hidden">
-        {/* Dark graph canvas island */}
-        <div className="absolute inset-0 bg-[#0a0f1e]">
-          {/* Ambient gradients */}
-          <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="absolute top-1/4 left-1/3 w-[600px] h-[400px] bg-indigo-900/15 rounded-full blur-3xl" />
-            <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[300px] bg-violet-900/10 rounded-full blur-3xl" />
-          </div>
-        </div>
-
+      <div className="flex-1 relative overflow-hidden bg-white">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center z-10">
-            <div className="flex flex-col items-center gap-3 text-slate-400">
+            <div className="flex flex-col items-center gap-3 text-slate-500">
               <Loader2 size={28} className="animate-spin text-indigo-600" />
               <p className="text-sm">Loading dependency graph…</p>
             </div>
@@ -268,7 +259,7 @@ export default function GraphPage() {
               { color: "#f59e0b", label: "High risk vendor" },
               { color: "#6366f1", label: "Vendor" },
               { color: "#22d3ee", label: "Service" },
-              { color: "#ffffff", label: "Your bank" },
+              { color: "#0f172a", label: "Your bank" },
             ].map(({ color, label }) => (
               <div key={label} className="flex items-center gap-2">
                 <div

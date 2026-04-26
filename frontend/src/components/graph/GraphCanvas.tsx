@@ -61,7 +61,7 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
       label: "Your Bank",
       node_type: "Bank",
       criticality_score: 0,
-      color: "#ffffff",
+      color: "#0f172a",   // navy — visible on light canvas
       size: 26,
       baseSize: 26,
       zIndex: 10,
@@ -92,7 +92,7 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
           label: attributes.label,
           // "arrow" type uses EdgeArrowProgram — shows direction
           type: isDepends ? "arrow" : "line",
-          color: isDepends ? "#f59e0b55" : "#33415566",
+          color: isDepends ? "#f59e0baa" : "#94a3b866",
           size: isDepends ? 2.5 : 1.2,
         });
       }
@@ -105,7 +105,7 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
         if (!graph.hasEdge(edgeKey)) {
           graph.addEdgeWithKey(edgeKey, BANK_KEY, key, {
             type: "line",
-            color: "#3b4d6644",
+            color: "#94a3b855",   // slate-400 — visible but subtle on white
             size: 0.8,
             label: "",
           });
@@ -138,7 +138,7 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
       labelFont: "Inter, system-ui, sans-serif",
       labelSize: 11,
       labelWeight: "600",
-      labelColor: { color: "#e2e8f0" },
+      labelColor: { color: "#334155" },   // slate-700 — legible on white canvas
       labelDensity: 0.05,  // lower = fewer labels, reduces clutter at full zoom
       labelGridCellSize: 100,
 
@@ -200,7 +200,7 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
 
     renderer.setSetting("nodeReducer", (node, nodeData) => {
       // Bank always white, always on top
-      if (node === BANK_KEY) return { ...nodeData, color: "#ffffff", size: 26, zIndex: 10 };
+      if (node === BANK_KEY) return { ...nodeData, color: "#0f172a", size: 26, zIndex: 10 };
 
       if (!selectedNode) return nodeData;
 
@@ -210,8 +210,8 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
       if (graph.areNeighbors(selectedNode, node)) {
         return { ...nodeData, zIndex: 3 };
       }
-      // Dim non-neighbors
-      return { ...nodeData, color: "#1e2d45", label: undefined, size: (nodeData.baseSize ?? 10) * 0.65, zIndex: 0 };
+      // Dim non-neighbors — fade to light slate so they recede on white canvas
+      return { ...nodeData, color: "#cbd5e1", label: undefined, size: (nodeData.baseSize ?? 10) * 0.65, zIndex: 0 };
     });
 
     renderer.setSetting("edgeReducer", (edge, edgeData) => {
@@ -219,7 +219,7 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
       if (graph.hasExtremity(edge, selectedNode)) {
         return { ...edgeData, size: (edgeData.size ?? 1) * 2.8, color: "#6366f1aa", zIndex: 5 };
       }
-      return { ...edgeData, color: "#0f172a", size: 0.3, zIndex: 0 };
+      return { ...edgeData, color: "#e2e8f0", size: 0.3, zIndex: 0 };
     });
 
     renderer.refresh();

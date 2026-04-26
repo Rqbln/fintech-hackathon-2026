@@ -21,7 +21,7 @@ export function scoreToLabel(score: number): string {
 }
 
 export function nodeColor(nodeType: string, score: number): string {
-  if (nodeType === "Bank") return "#f8fafc";
+  if (nodeType === "Bank") return "#0f172a";
   if (nodeType === "Service") return "#22d3ee";
   if (nodeType === "Contract") return "#4ade80";
   if (nodeType === "DORAObligation") return "#f87171";

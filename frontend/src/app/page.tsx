@@ -112,14 +112,8 @@ export default function UploadPage() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden">
-      {/* Ambient background glow */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-100/40 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-1/4 w-[400px] h-[300px] bg-slate-100/60 rounded-full blur-3xl" />
-      </div>
-
-      <div className="w-full max-w-xl relative z-10">
+    <main className="min-h-screen flex flex-col items-center justify-center px-4 py-16">
+      <div className="w-full max-w-xl">
         {/* Logo / header */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-200 mb-4">
