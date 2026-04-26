@@ -19,11 +19,16 @@
 
 body {
   background-color: var(--background);
-  background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
-  background-size: 24px 24px;
   color: var(--foreground);
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Dot-grid texture — apply to any slate-50 surface that needs depth */
+.dot-bg {
+  background-color: #f8fafc;
+  background-image: radial-gradient(circle, #94a3b8 1.5px, transparent 1.5px);
+  background-size: 28px 28px;
 }
 
 /* Tabular numbers for all score/percentage displays */
