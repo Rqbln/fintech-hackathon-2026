@@ -122,7 +122,7 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
                     {nodeAttrs?.label}
                   </h2>
                   {cached && (
-                    <span className="flex items-center gap-1 text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">
+                    <span className="flex items-center gap-1 text-[11px] text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">
                       <Zap size={8} /> cached
                     </span>
                   )}
@@ -134,7 +134,7 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
                       {nodeAttrs.country}
                     </span>
                   )}
-                  <span className={cn("px-1.5 py-0.5 rounded border text-[10px] font-medium", riskBadgeClass(riskLabel.toLowerCase()))}>
+                  <span className={cn("px-1.5 py-0.5 rounded border text-[11px] font-medium tabular", riskBadgeClass(riskLabel.toLowerCase()))}>
                     {riskLabel} · {(score * 100).toFixed(0)}%
                   </span>
                   {contractIds.length > 0 && (
@@ -153,12 +153,12 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
             {/* Progress bar while streaming */}
             {streaming && (
               <div className="mt-3">
-                <div className="flex items-center justify-between text-[10px] text-slate-500 mb-1">
+                <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
                   <span className="flex items-center gap-1.5">
                     <Loader2 size={10} className="animate-spin" />
                     Evaluating obligations…
                   </span>
-                  <span>{findings.length}/12</span>
+                  <span className="tabular">{findings.length}/12</span>
                 </div>
                 <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
                   <motion.div
@@ -223,8 +223,8 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
               <div className="space-y-3">
                 {execSummary && (
                   <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 mb-4">
-                    <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-1.5 font-semibold">AI Summary</p>
-                    <div className="text-xs text-slate-700 leading-relaxed prose prose-slate prose-xs max-w-none
+                    <p className="text-[11px] text-slate-400 uppercase tracking-widest mb-2 font-semibold">AI Summary</p>
+                    <div className="text-[13px] text-slate-700 leading-relaxed prose prose-slate prose-xs max-w-none
                       [&_ul]:list-disc [&_ul]:pl-4 [&_ul]:space-y-1
                       [&_ol]:list-decimal [&_ol]:pl-4 [&_ol]:space-y-1
                       [&_li]:text-slate-700
@@ -279,15 +279,15 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
                       className="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-3"
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-xs font-semibold text-slate-900">{p.summary}</p>
-                        <span className={cn("text-[10px] px-1.5 py-0.5 rounded border font-medium shrink-0", riskBadgeClass(p.priority))}>
+                        <p className="text-sm font-semibold text-slate-900 leading-snug">{p.summary}</p>
+                        <span className={cn("text-[11px] px-1.5 py-0.5 rounded border font-medium shrink-0", riskBadgeClass(p.priority))}>
                           {p.priority}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-700 leading-relaxed">{p.detail}</p>
+                      <p className="text-[13px] text-slate-700 leading-relaxed">{p.detail}</p>
                       {p.sovereign_alternatives.length > 0 && (
                         <div>
-                          <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-2 font-semibold">EU-Sovereign alternatives</p>
+                          <p className="text-[11px] text-slate-400 uppercase tracking-widest mb-2 font-semibold">EU-Sovereign alternatives</p>
                           <div className="space-y-1.5">
                             {p.sovereign_alternatives.slice(0, 3).map((alt) => (
                               <div
@@ -295,12 +295,12 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
                                 className="flex items-center justify-between px-3 py-2 bg-white rounded-lg border border-slate-200"
                               >
                                 <div>
-                                  <span className="text-xs font-medium text-slate-900">{alt.name}</span>
-                                  <span className="text-[10px] text-slate-500 ml-1.5">{alt.hq_country}</span>
-                                  {alt.eu_sovereign && <span className="ml-1.5 text-[10px] text-emerald-600 font-medium">EU ✓</span>}
-                                  {alt.certification && <span className="ml-1 text-[10px] text-indigo-600">{alt.certification}</span>}
+                                  <span className="text-xs font-semibold text-slate-900">{alt.name}</span>
+                                  <span className="text-[11px] text-slate-500 ml-1.5">{alt.hq_country}</span>
+                                  {alt.eu_sovereign && <span className="ml-1.5 text-[11px] text-emerald-600 font-medium">EU ✓</span>}
+                                  {alt.certification && <span className="ml-1 text-[11px] text-indigo-600">{alt.certification}</span>}
                                 </div>
-                                <span className="text-[10px] text-slate-500">{alt.cost_delta}</span>
+                                <span className="text-[11px] text-slate-500 tabular">{alt.cost_delta}</span>
                               </div>
                             ))}
                           </div>

@@ -119,10 +119,10 @@ export default function UploadPage() {
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-200 mb-4">
             <ShieldCheck size={26} className="text-indigo-600" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          <h1 className="font-display text-4xl text-slate-900 mt-2 tracking-tight leading-tight">
             DORA AI Analyst
           </h1>
-          <p className="text-slate-500 text-sm mt-1.5">
+          <p className="text-slate-500 text-[15px] mt-2 leading-relaxed">
             Upload vendor contracts · AI extracts, maps, and audits DORA compliance
           </p>
         </div>
