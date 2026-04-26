@@ -118,6 +118,28 @@ export async function getReportMarkdown(sessionId: string): Promise<string> {
   return res.text();
 }
 
+export async function getCompliantDraftMarkdown(sessionId: string, vendorName?: string): Promise<string> {
+  const payload = vendorName?.trim() ? { vendor_name: vendorName.trim() } : {};
+  const res = await fetch(`/api/report/${sessionId}/compliant-draft`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Compliant draft generation failed: ${res.status}`);
+  return res.text();
+}
+
+export async function getCompliantDraftPdf(sessionId: string, vendorName?: string): Promise<Blob> {
+  const payload = vendorName?.trim() ? { vendor_name: vendorName.trim() } : {};
+  const res = await fetch(`/api/report/${sessionId}/compliant-draft.pdf`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Compliant PDF generation failed: ${res.status}`);
+  return res.blob();
+}
+
 export async function getReport(sessionId: string): Promise<ReportArtifact> {
   return get<ReportArtifact>(`/api/report/${sessionId}`);
 }

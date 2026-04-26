@@ -16,8 +16,8 @@ import type { ObligationFinding, RemediationProposal } from "@/lib/types";
 import {
   buildHighlightedPdfUrl,
   buildMultiHighlightedPdfUrl,
+  getCompliantDraftPdf,
   findTextPage,
-  getReportMarkdown,
   getSessionTrace,
   listSessions,
   streamGapAnalysis,
@@ -138,7 +138,7 @@ function InvestigationContent() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [exporting, setExporting] = useState(false);
+  const [generatingCompliantPdf, setGeneratingCompliantPdf] = useState(false);
   const [runStartedAt, setRunStartedAt] = useState<string>("");
   const [streamCount, setStreamCount] = useState(0);
   const [progressStage, setProgressStage] = useState<"analysis" | "remediation" | "done">("analysis");
@@ -384,20 +384,19 @@ function InvestigationContent() {
   const totalDone = !loading;
   const progressPercent = progressTotal > 0 ? Math.min(100, Math.round((progressCompleted / progressTotal) * 100)) : 0;
 
-  const handleExportMarkdown = async () => {
+  const handleGenerateCompliantPdf = async () => {
     if (!sessionId) return;
-    setExporting(true);
+    setGeneratingCompliantPdf(true);
     try {
-      const md = await getReportMarkdown(sessionId);
-      const blob = new Blob([md], { type: "text/markdown" });
+      const blob = await getCompliantDraftPdf(sessionId, vendorName);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `regagent_report_${sessionId.slice(0, 8)}.md`;
+      a.download = `dora_compliant_draft_${sessionId.slice(0, 8)}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } finally {
-      setExporting(false);
+      setGeneratingCompliantPdf(false);
     }
   };
 
@@ -422,12 +421,12 @@ function InvestigationContent() {
           </button>
           {sessionId && (
             <button
-              onClick={handleExportMarkdown}
-              disabled={exporting}
-              className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
+              onClick={handleGenerateCompliantPdf}
+              disabled={generatingCompliantPdf}
+              className="inline-flex items-center gap-2 rounded-md bg-blue-700 px-3 py-2 text-xs font-semibold text-white shadow-md shadow-blue-900/30 hover:bg-blue-600 disabled:opacity-60"
             >
-              {exporting ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
-              Export report
+              {generatingCompliantPdf ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+              Generate DORA-compliant PDF
             </button>
           )}
         </div>

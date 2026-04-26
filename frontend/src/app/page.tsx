@@ -6,23 +6,13 @@ import { ArrowRight } from "lucide-react";
 import DropZone from "@/components/upload/DropZone";
 import ProcessingFeed from "@/components/upload/ProcessingFeed";
 import { getSessionTrace, getVendorConcentration, ingestContract, listSessions, pollJob } from "@/lib/api";
-import type { CaseProfile, ReportArtifact, SessionSummary, UploadedFile, VendorConcentrationItem } from "@/lib/types";
+import type { ReportArtifact, SessionSummary, UploadedFile, VendorConcentrationItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import SaasShell from "@/components/shell/SaasShell";
 
 const POLL_INTERVAL_MS = 2000;
-const CASE_KEY = "dora_case_profile";
 const DASHBOARD_REFRESH_MS = 15000;
 const MOCK_DASHBOARD = true;
-
-const DEFAULT_CASE: CaseProfile = {
-  institution_name: "",
-  institution_type: "Bank",
-  jurisdiction: "France / EU",
-  regulator_focus: "DORA Art.30",
-  business_owner: "",
-  notes: "",
-};
 
 const DORA_PILLARS = [
   { id: "risk", label: "ICT Risk Mgmt", color: "#2563eb" },
@@ -51,7 +41,6 @@ export default function UploadPage() {
   const router = useRouter();
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [running, setRunning] = useState(false);
-  const [caseProfile, setCaseProfile] = useState<CaseProfile>(DEFAULT_CASE);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [reportsBySession, setReportsBySession] = useState<Record<string, ReportArtifact>>({});
   const [concentration, setConcentration] = useState<VendorConcentrationItem[]>([]);
@@ -98,7 +87,7 @@ export default function UploadPage() {
   }, []);
 
   const allDone = files.length > 0 && files.every((f) => f.status === "done" || f.status === "error");
-  const caseReady = caseProfile.institution_name.trim().length > 1 && caseProfile.business_owner.trim().length > 1;
+  const caseReady = true;
 
   const processFiles = useCallback(async (rawFiles: File[]) => {
     setRunning(true);
@@ -190,7 +179,6 @@ export default function UploadPage() {
       score: f.score,
     }));
     sessionStorage.setItem("dora_contracts", JSON.stringify(payload));
-    sessionStorage.setItem(CASE_KEY, JSON.stringify(caseProfile));
     router.push("/graph");
   };
 
@@ -412,51 +400,6 @@ export default function UploadPage() {
           <h3 className="mb-4 text-xl font-semibold text-slate-900">Document Ingestion Hub</h3>
           <div className="rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-8">
             <DropZone onFiles={processFiles} disabled={running || !caseReady} />
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              <label className="lg:col-span-2">
-                <span className="mb-1 block text-xs font-medium text-slate-500">Institution name</span>
-                <input
-                  value={caseProfile.institution_name}
-                  onChange={(e) => setCaseProfile((prev) => ({ ...prev, institution_name: e.target.value }))}
-                  className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-sm outline-none focus:border-slate-400"
-                />
-              </label>
-              <label>
-                <span className="mb-1 block text-xs font-medium text-slate-500">Institution type</span>
-                <select
-                  value={caseProfile.institution_type}
-                  onChange={(e) =>
-                    setCaseProfile((prev) => ({ ...prev, institution_type: e.target.value as CaseProfile["institution_type"] }))
-                  }
-                  className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-sm outline-none focus:border-slate-400"
-                >
-                  <option>Bank</option>
-                  <option>Insurance</option>
-                  <option>PSP/Fintech</option>
-                  <option>Asset Manager</option>
-                  <option>Other</option>
-                </select>
-              </label>
-              <label>
-                <span className="mb-1 block text-xs font-medium text-slate-500">Owner</span>
-                <input
-                  value={caseProfile.business_owner}
-                  onChange={(e) => setCaseProfile((prev) => ({ ...prev, business_owner: e.target.value }))}
-                  className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-sm outline-none focus:border-slate-400"
-                />
-              </label>
-              <label>
-                <span className="mb-1 block text-xs font-medium text-slate-500">Jurisdiction</span>
-                <input
-                  value={caseProfile.jurisdiction}
-                  onChange={(e) => setCaseProfile((prev) => ({ ...prev, jurisdiction: e.target.value }))}
-                  className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-sm outline-none focus:border-slate-400"
-                />
-              </label>
-            </div>
-            {!caseReady && (
-              <p className="mt-3 text-xs text-amber-700">Fill institution name and owner to enable upload.</p>
-            )}
             {files.length > 0 && (
               <div className="mt-4">
                 <ProcessingFeed files={files} />
