@@ -115,17 +115,17 @@ export default function UploadPage() {
     <main className="min-h-screen flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden">
       {/* Ambient background glow */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-600/8 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-1/4 w-[400px] h-[300px] bg-violet-600/6 rounded-full blur-3xl" />
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-100/40 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 w-[400px] h-[300px] bg-slate-100/60 rounded-full blur-3xl" />
       </div>
 
       <div className="w-full max-w-xl relative z-10">
         {/* Logo / header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 mb-4">
-            <ShieldCheck size={26} className="text-indigo-400" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-200 mb-4">
+            <ShieldCheck size={26} className="text-indigo-600" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-100 tracking-tight">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             DORA AI Analyst
           </h1>
           <p className="text-slate-500 text-sm mt-1.5">
@@ -152,14 +152,14 @@ export default function UploadPage() {
               "flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200",
               allDone
                 ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/40 scale-100 hover:scale-[1.02]"
-                : "bg-slate-800 text-slate-600 cursor-not-allowed"
+                : "bg-slate-100 text-slate-400 cursor-not-allowed"
             )}
           >
             View Risk Graph
             <ArrowRight size={16} />
           </button>
           {files.length > 0 && !allDone && (
-            <p className="text-xs text-slate-600">AI pipeline running — please wait…</p>
+            <p className="text-xs text-slate-500">AI pipeline running — please wait…</p>
           )}
         </div>
       </div>

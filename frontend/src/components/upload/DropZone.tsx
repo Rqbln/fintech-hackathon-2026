@@ -30,8 +30,8 @@ export default function DropZone({ onFiles, disabled }: Props) {
         "cursor-pointer transition-all duration-200 select-none",
         "min-h-[220px] px-8 py-10",
         dragging
-          ? "border-indigo-500 bg-indigo-500/10 scale-[1.01]"
-          : "border-slate-700 bg-slate-900/40 hover:border-slate-500 hover:bg-slate-900/60",
+          ? "border-indigo-500 bg-indigo-50 scale-[1.01]"
+          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
         disabled && "opacity-50 cursor-not-allowed"
       )}
       onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -48,12 +48,12 @@ export default function DropZone({ onFiles, disabled }: Props) {
       />
       <div className={cn(
         "p-4 rounded-2xl transition-colors",
-        dragging ? "bg-indigo-500/20" : "bg-slate-800"
+        dragging ? "bg-indigo-100" : "bg-slate-100"
       )}>
-        <Upload size={28} className={dragging ? "text-indigo-400" : "text-slate-400"} />
+        <Upload size={28} className={dragging ? "text-indigo-600" : "text-slate-500"} />
       </div>
       <div className="text-center">
-        <p className="text-slate-200 font-medium">
+        <p className="text-slate-900 font-medium">
           {dragging ? "Release to upload" : "Drop vendor contracts here"}
         </p>
         <p className="text-slate-500 text-sm mt-1">

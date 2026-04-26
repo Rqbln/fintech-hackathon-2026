@@ -136,25 +136,25 @@ export default function GraphPage() {
 
   const riskColorClass =
     overallRisk === "Critical"
-      ? "text-red-400 bg-red-500/10 border-red-500/30"
+      ? "text-red-600 bg-red-50 border-red-200"
       : overallRisk === "High"
-      ? "text-amber-400 bg-amber-500/10 border-amber-500/30"
-      : "text-indigo-400 bg-indigo-500/10 border-indigo-500/30";
+      ? "text-amber-600 bg-amber-50 border-amber-200"
+      : "text-indigo-600 bg-indigo-50 border-indigo-200";
 
   return (
-    <div className="h-screen flex flex-col bg-[#080d1a] overflow-hidden">
+    <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
       {/* Navbar */}
-      <nav className="shrink-0 flex items-center justify-between px-5 py-3 bg-[#0d1424]/80 backdrop-blur border-b border-slate-700/60 z-10">
+      <nav className="shrink-0 flex items-center justify-between px-5 py-3 bg-white backdrop-blur border-b border-slate-200 z-10">
         <div className="flex items-center gap-4">
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 transition-colors text-sm"
+            className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 transition-colors text-sm"
           >
             <ArrowLeft size={15} />
             <span>Upload</span>
           </Link>
-          <span className="text-slate-700">·</span>
-          <span className="text-sm font-semibold text-slate-200">DORA Risk Graph</span>
+          <span className="text-slate-300">·</span>
+          <span className="text-sm font-semibold text-slate-900">DORA Risk Graph</span>
           {overallRisk && (
             <span
               className={cn(
@@ -174,8 +174,8 @@ export default function GraphPage() {
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors",
                 showPortfolio
-                  ? "bg-indigo-600/80 text-white"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/60"
+                  ? "bg-indigo-600 text-white"
+                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
               )}
             >
               <LayoutList size={13} />
@@ -185,7 +185,7 @@ export default function GraphPage() {
           <button
             onClick={handleRefreshGraph}
             disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-700/60 transition-colors disabled:opacity-40"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors disabled:opacity-40"
           >
             <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
             Refresh
@@ -194,7 +194,7 @@ export default function GraphPage() {
             <button
               onClick={handleExportMarkdown}
               disabled={exportLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-indigo-600/80 hover:bg-indigo-600 text-white transition-colors disabled:opacity-40"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-indigo-600 hover:bg-indigo-700 text-white transition-colors disabled:opacity-40"
             >
               {exportLoading ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
               ECB Report
@@ -205,16 +205,19 @@ export default function GraphPage() {
 
       {/* Main area */}
       <div className="flex-1 relative overflow-hidden">
-        {/* Ambient gradients */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/3 w-[600px] h-[400px] bg-indigo-900/15 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[300px] bg-violet-900/10 rounded-full blur-3xl" />
+        {/* Dark graph canvas island */}
+        <div className="absolute inset-0 bg-[#0a0f1e]">
+          {/* Ambient gradients */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/4 left-1/3 w-[600px] h-[400px] bg-indigo-900/15 rounded-full blur-3xl" />
+            <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[300px] bg-violet-900/10 rounded-full blur-3xl" />
+          </div>
         </div>
 
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center z-10">
-            <div className="flex flex-col items-center gap-3 text-slate-500">
-              <Loader2 size={28} className="animate-spin text-indigo-400" />
+            <div className="flex flex-col items-center gap-3 text-slate-400">
+              <Loader2 size={28} className="animate-spin text-indigo-600" />
               <p className="text-sm">Loading dependency graph…</p>
             </div>
           </div>
@@ -222,12 +225,12 @@ export default function GraphPage() {
 
         {error && (
           <div className="absolute inset-0 flex items-center justify-center z-10">
-            <div className="text-center text-red-400 text-sm">
+            <div className="text-center text-red-600 text-sm">
               <p className="font-medium mb-1">Failed to load graph</p>
               <p className="text-slate-500 text-xs">{error}</p>
               <button
                 onClick={handleRefreshGraph}
-                className="mt-3 text-xs text-indigo-400 hover:underline"
+                className="mt-3 text-xs text-indigo-600 hover:underline"
               >
                 Retry
               </button>
@@ -255,7 +258,7 @@ export default function GraphPage() {
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="absolute bottom-5 left-5 flex flex-col gap-1.5 bg-[#0d1424]/80 backdrop-blur border border-slate-700/60 rounded-xl px-4 py-3"
+            className="absolute bottom-5 left-5 flex flex-col gap-1.5 bg-white border border-slate-200 shadow-sm rounded-xl px-4 py-3"
           >
             <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mb-1">
               Nodes
@@ -272,10 +275,10 @@ export default function GraphPage() {
                   className="w-2.5 h-2.5 rounded-full shrink-0"
                   style={{ background: color }}
                 />
-                <span className="text-xs text-slate-400">{label}</span>
+                <span className="text-xs text-slate-700">{label}</span>
               </div>
             ))}
-            <p className="text-[10px] text-slate-600 mt-1.5">Click a vendor to analyse</p>
+            <p className="text-[10px] text-slate-500 mt-1.5">Click a vendor to analyse</p>
           </motion.div>
         )}
 

@@ -21,9 +21,9 @@ function FileRow({ uf }: { uf: UploadedFile }) {
   const isRunning = uf.status === "running" || uf.status === "uploading";
 
   return (
-    <div className="border border-slate-700/60 rounded-lg p-4 bg-slate-900/60">
+    <div className="border border-slate-200 rounded-lg p-4 bg-white">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-slate-200 truncate max-w-[220px]">
+        <span className="text-sm font-medium text-slate-900 truncate max-w-[220px]">
           {uf.file.name}
         </span>
         <span className="text-xs text-slate-500">
@@ -32,7 +32,7 @@ function FileRow({ uf }: { uf: UploadedFile }) {
       </div>
 
       {isError && (
-        <div className="flex items-center gap-2 text-red-400 text-xs mt-1">
+        <div className="flex items-center gap-2 text-red-600 text-xs mt-1">
           <XCircle size={13} />
           <span>{uf.error ?? "Pipeline failed"}</span>
         </div>
@@ -40,13 +40,13 @@ function FileRow({ uf }: { uf: UploadedFile }) {
 
       {isDone && uf.vendorName && (
         <div className="mt-1">
-          <div className="flex items-center gap-2 text-emerald-400 text-xs">
+          <div className="flex items-center gap-2 text-emerald-600 text-xs">
             <CheckCircle2 size={13} />
             <span>{uf.vendorName}</span>
           </div>
           {uf.score !== undefined && (
             <div className="mt-1.5 flex items-center gap-2">
-              <div className="h-1.5 flex-1 bg-slate-800 rounded-full overflow-hidden">
+              <div className="h-1.5 flex-1 bg-slate-200 rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-700"
                   style={{
@@ -67,7 +67,7 @@ function FileRow({ uf }: { uf: UploadedFile }) {
         <div className="mt-2 space-y-1.5">
           {STEPS.map((step) => (
             <div key={step} className="flex items-center gap-2">
-              <Loader2 size={11} className="animate-spin text-indigo-400 shrink-0" />
+              <Loader2 size={11} className="animate-spin text-indigo-600 shrink-0" />
               <span className="text-xs text-slate-400">{step}</span>
             </div>
           ))}

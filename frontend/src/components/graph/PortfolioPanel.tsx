@@ -42,21 +42,21 @@ export default function PortfolioPanel({ nodes, onVendorClick, onClose }: Props)
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: "-100%", opacity: 0 }}
         transition={{ type: "spring", stiffness: 340, damping: 32 }}
-        className="absolute top-0 left-0 h-full w-[360px] flex flex-col bg-[#0d1424]/95 backdrop-blur-sm border-r border-slate-700/60 z-20 overflow-hidden"
+        className="absolute top-0 left-0 h-full w-[360px] flex flex-col bg-white/95 backdrop-blur border-r border-slate-200 shadow-xl z-20 overflow-hidden"
       >
         {/* Header */}
-        <div className="px-5 pt-5 pb-4 border-b border-slate-700/60 shrink-0">
+        <div className="px-5 pt-5 pb-4 border-b border-slate-200 shrink-0">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Building2 size={15} className="text-indigo-400" />
-              <h2 className="text-sm font-semibold text-slate-100">ICT Risk Portfolio</h2>
-              <span className="text-xs text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded-full">
+              <Building2 size={15} className="text-indigo-600" />
+              <h2 className="text-sm font-semibold text-slate-900">ICT Risk Portfolio</h2>
+              <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-full">
                 {vendors.length} vendor{vendors.length !== 1 ? "s" : ""}
               </span>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-slate-700/60 text-slate-400 hover:text-slate-200 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
             >
               <X size={15} />
             </button>
@@ -64,15 +64,15 @@ export default function PortfolioPanel({ nodes, onVendorClick, onClose }: Props)
 
           {/* Aggregate stats */}
           <div className="grid grid-cols-3 gap-2">
-            <div className="bg-slate-800/60 rounded-lg p-2.5 text-center border border-slate-700/40">
-              <p className="text-lg font-bold text-red-400">{critical}</p>
+            <div className="bg-slate-100 rounded-lg p-2.5 text-center border border-slate-200">
+              <p className="text-lg font-bold text-red-600">{critical}</p>
               <p className="text-[10px] text-slate-500 mt-0.5">Critical</p>
             </div>
-            <div className="bg-slate-800/60 rounded-lg p-2.5 text-center border border-slate-700/40">
-              <p className="text-lg font-bold text-emerald-400">{euBased}</p>
+            <div className="bg-slate-100 rounded-lg p-2.5 text-center border border-slate-200">
+              <p className="text-lg font-bold text-emerald-600">{euBased}</p>
               <p className="text-[10px] text-slate-500 mt-0.5">EU-based</p>
             </div>
-            <div className="bg-slate-800/60 rounded-lg p-2.5 text-center border border-slate-700/40">
+            <div className="bg-slate-100 rounded-lg p-2.5 text-center border border-slate-200">
               <p className="text-lg font-bold" style={{ color: scoreToColor(avgScore) }}>
                 {(avgScore * 100).toFixed(0)}%
               </p>
@@ -84,7 +84,7 @@ export default function PortfolioPanel({ nodes, onVendorClick, onClose }: Props)
         {/* Vendor list */}
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
           {vendors.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-600">
+            <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-500">
               <Building2 size={28} />
               <p className="text-sm text-center">No vendors yet.<br />Upload a contract to start.</p>
             </div>
@@ -99,7 +99,7 @@ export default function PortfolioPanel({ nodes, onVendorClick, onClose }: Props)
               <button
                 key={node.key}
                 onClick={() => onVendorClick(node.key, node.attributes)}
-                className="w-full text-left bg-slate-900/50 hover:bg-slate-800/60 border border-slate-700/40 hover:border-slate-600/60 rounded-xl px-3.5 py-3 transition-colors group"
+                className="w-full text-left bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 rounded-xl px-3.5 py-3 transition-colors group"
               >
                 <div className="flex items-start gap-3">
                   {/* Risk dot */}
@@ -109,7 +109,7 @@ export default function PortfolioPanel({ nodes, onVendorClick, onClose }: Props)
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs font-semibold text-slate-200 truncate group-hover:text-white transition-colors">
+                      <p className="text-xs font-semibold text-slate-900 truncate group-hover:text-slate-900 transition-colors">
                         {node.attributes.label}
                       </p>
                       <span className={cn("text-[10px] px-1.5 py-0.5 rounded border font-medium shrink-0", riskBadgeClass(riskLabel.toLowerCase()))}>
@@ -125,12 +125,12 @@ export default function PortfolioPanel({ nodes, onVendorClick, onClose }: Props)
                         </span>
                       )}
                       {eu ? (
-                        <span className="flex items-center gap-1 text-[10px] text-emerald-400">
+                        <span className="flex items-center gap-1 text-[10px] text-emerald-600">
                           <ShieldCheck size={9} />
                           EU
                         </span>
                       ) : node.attributes.country ? (
-                        <span className="flex items-center gap-1 text-[10px] text-amber-400">
+                        <span className="flex items-center gap-1 text-[10px] text-amber-600">
                           <AlertTriangle size={9} />
                           Non-EU
                         </span>
@@ -138,13 +138,13 @@ export default function PortfolioPanel({ nodes, onVendorClick, onClose }: Props)
                     </div>
 
                     {/* Score bar */}
-                    <div className="mt-2 h-1 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="mt-2 h-1 bg-slate-200 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all"
                         style={{ width: `${score * 100}%`, background: riskColor }}
                       />
                     </div>
-                    <p className="text-[10px] text-slate-600 mt-0.5">
+                    <p className="text-[10px] text-slate-500 mt-0.5">
                       {(score * 100).toFixed(0)}% criticality · click to analyse
                     </p>
                   </div>

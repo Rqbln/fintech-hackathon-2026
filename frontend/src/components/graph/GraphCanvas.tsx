@@ -138,7 +138,7 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
       labelFont: "Inter, system-ui, sans-serif",
       labelSize: 11,
       labelWeight: "600",
-      labelColor: { color: "#94a3b8" },
+      labelColor: { color: "#e2e8f0" },
       labelDensity: 0.05,  // lower = fewer labels, reduces clutter at full zoom
       labelGridCellSize: 100,
 

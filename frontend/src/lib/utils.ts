@@ -37,10 +37,10 @@ export function nodeSize(nodeType: string, score: number): number {
 }
 
 export function verdictColor(verdict: Verdict): string {
-  if (verdict === "met") return "text-emerald-400";
-  if (verdict === "partially_met") return "text-amber-400";
-  if (verdict === "unmet") return "text-red-400";
-  return "text-slate-400";
+  if (verdict === "met") return "text-emerald-600";
+  if (verdict === "partially_met") return "text-amber-600";
+  if (verdict === "unmet") return "text-red-600";
+  return "text-slate-500";
 }
 
 export function verdictIcon(verdict: Verdict): string {
@@ -51,8 +51,8 @@ export function verdictIcon(verdict: Verdict): string {
 }
 
 export function riskBadgeClass(level: string): string {
-  if (level === "critical") return "bg-red-500/20 text-red-400 border-red-500/30";
-  if (level === "high") return "bg-amber-500/20 text-amber-400 border-amber-500/30";
-  if (level === "medium") return "bg-indigo-500/20 text-indigo-400 border-indigo-500/30";
-  return "bg-slate-500/20 text-slate-400 border-slate-500/30";
+  if (level === "critical") return "bg-red-50 text-red-700 border-red-200";
+  if (level === "high") return "bg-amber-50 text-amber-700 border-amber-200";
+  if (level === "medium") return "bg-indigo-50 text-indigo-700 border-indigo-200";
+  return "bg-slate-100 text-slate-600 border-slate-200";
 }
