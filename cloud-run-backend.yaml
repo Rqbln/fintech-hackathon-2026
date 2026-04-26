@@ -54,25 +54,27 @@ spec:
             httpGet:
               path: /health
               port: 8000
-            initialDelaySeconds: 20
-            periodSeconds: 5
-            failureThreshold: 20
+            initialDelaySeconds: 40
+            periodSeconds: 10
+            failureThreshold: 12
 
         # ── Sidecar: Neo4j (localhost:7687) ───────────────────────────────────
         - name: neo4j
           image: neo4j:5.26-community
           resources:
             limits:
-              memory: 1Gi
+              memory: 1500Mi
               cpu: "1"
           env:
             - name: NEO4J_AUTH
               value: "neo4j/password123"
             - name: NEO4J_server_memory_heap_initial__size
-              value: "256m"
-            - name: NEO4J_server_memory_heap_max__size
-              value: "512m"
-            - name: NEO4J_server_memory_pagecache_size
               value: "128m"
+            - name: NEO4J_server_memory_heap_max__size
+              value: "256m"
+            - name: NEO4J_server_memory_pagecache_size
+              value: "64m"
             - name: NEO4J_server_default__listen__address
               value: "0.0.0.0"
+            - name: NEO4J_server_jvm_additional
+              value: "-XX:+UseG1GC -XX:MaxRAMPercentage=60.0"
