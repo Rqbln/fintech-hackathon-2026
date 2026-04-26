@@ -33,7 +33,7 @@ export function nodeSize(nodeType: string, score: number): number {
   if (nodeType === "Service") return 8;
   if (nodeType === "Contract") return 7;
   if (nodeType === "DORAObligation") return 8;
-  return 10 + score * 30;
+  return 8 + score * 44;  // 8px (low) → 52px (critical) — more dramatic risk signal
 }
 
 export function verdictColor(verdict: Verdict): string {

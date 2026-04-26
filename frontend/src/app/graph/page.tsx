@@ -45,6 +45,11 @@ export default function GraphPage() {
   const [exportLoading, setExportLoading] = useState(false);
   const [lastSessionId, setLastSessionId] = useState<string | null>(null);
   const [showPortfolio, setShowPortfolio] = useState(false);
+  const [complianceColors, setComplianceColors] = useState<Record<string, string>>({});
+
+  const handleComplianceReady = useCallback((vendorKey: string, color: string) => {
+    setComplianceColors((prev) => ({ ...prev, [vendorKey]: color }));
+  }, []);
 
   // Load graph on mount
   useEffect(() => {
@@ -240,6 +245,7 @@ export default function GraphPage() {
               data={graphData}
               selectedNode={selectedNode}
               onNodeClick={handleNodeClick}
+              complianceColors={complianceColors}
             />
           </motion.div>
         )}
@@ -255,10 +261,13 @@ export default function GraphPage() {
               Nodes
             </p>
             {[
-              { color: "#ef4444", label: "Critical vendor" },
-              { color: "#f59e0b", label: "High risk vendor" },
-              { color: "#2563eb", label: "Vendor" },
               { color: "#0f172a", label: "Your bank" },
+              { color: "#ef4444", label: "Critical risk" },
+              { color: "#f59e0b", label: "High risk" },
+              { color: "#2563eb", label: "Vendor (unanalysed)" },
+              { color: "#dc2626", label: "Non-compliant" },
+              { color: "#d97706", label: "Partially compliant" },
+              { color: "#059669", label: "Compliant" },
             ].map(({ color, label }) => (
               <div key={label} className="flex items-center gap-2">
                 <div
@@ -289,6 +298,7 @@ export default function GraphPage() {
             contractIds={vendorContracts}
             onClose={handleClosePanel}
             onSessionReady={setLastSessionId}
+            onComplianceReady={handleComplianceReady}
           />
         )}
       </div>

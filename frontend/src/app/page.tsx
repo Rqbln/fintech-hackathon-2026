@@ -140,14 +140,8 @@ export default function UploadPage() {
         {/* CTA */}
         <div className="mt-6 flex flex-col items-center gap-3">
           <button
-            disabled={!allDone}
             onClick={handleNavigate}
-            className={cn(
-              "flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200",
-              allDone
-                ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/40 scale-100 hover:scale-[1.02]"
-                : "bg-slate-100 text-slate-400 cursor-not-allowed"
-            )}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/20 transition-all duration-200 hover:scale-[1.02]"
           >
             View Risk Graph
             <ArrowRight size={16} />

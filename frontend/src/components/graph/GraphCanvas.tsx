@@ -13,6 +13,7 @@ interface Props {
   data: GraphResponse;
   selectedNode: string | null;
   onNodeClick: (key: string, attrs: NodeAttributes) => void;
+  complianceColors?: Record<string, string>; // vendorKey → color after gap analysis
 }
 
 const BANK_KEY = "client:bank";
@@ -44,7 +45,7 @@ function drawGlowHover(
   drawDiscNodeHover(ctx, data, settings);
 }
 
-export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) {
+export default function GraphCanvas({ data, selectedNode, onNodeClick, complianceColors = {} }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sigmaRef = useRef<Sigma | null>(null);
   const graphRef = useRef<Graph | null>(null);
@@ -98,15 +99,15 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
       }
     }
 
-    // Bank → Vendor edges (thin, structural)
+    // Bank → Vendor edges
     for (const { key, attributes } of data.nodes) {
       if (attributes.node_type === "Vendor") {
         const edgeKey = `bank->${key}`;
         if (!graph.hasEdge(edgeKey)) {
           graph.addEdgeWithKey(edgeKey, BANK_KEY, key, {
             type: "line",
-            color: "#64748b88",   // slate-500 at 53% — visible but thin on white
-            size: 0.8,
+            color: "#94a3b8",   // slate-400 solid — clearly visible on white
+            size: 1.2,
             label: "",
           });
         }
@@ -192,26 +193,29 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
-  // Selection highlight via reducers
+  // Selection highlight + compliance color via reducers
   useEffect(() => {
     const renderer = sigmaRef.current;
     const graph = graphRef.current;
     if (!renderer || !graph) return;
 
     renderer.setSetting("nodeReducer", (node, nodeData) => {
-      // Bank always white, always on top
       if (node === BANK_KEY) return { ...nodeData, color: "#0f172a", size: 26, zIndex: 10 };
 
-      if (!selectedNode) return nodeData;
+      // Apply compliance color if analysis has run for this vendor
+      const base = complianceColors[node]
+        ? { ...nodeData, color: complianceColors[node] }
+        : nodeData;
+
+      if (!selectedNode) return base;
 
       if (node === selectedNode) {
-        return { ...nodeData, zIndex: 8, size: (nodeData.baseSize ?? 15) * 1.4 };
+        return { ...base, zIndex: 8, size: (base.baseSize ?? 15) * 1.4 };
       }
       if (graph.areNeighbors(selectedNode, node)) {
-        return { ...nodeData, zIndex: 3 };
+        return { ...base, zIndex: 3 };
       }
-      // Dim non-neighbors — fade to light slate so they recede on white canvas
-      return { ...nodeData, color: "#cbd5e1", label: undefined, size: (nodeData.baseSize ?? 10) * 0.65, zIndex: 0 };
+      return { ...base, color: "#cbd5e1", label: undefined, size: (base.baseSize ?? 10) * 0.65, zIndex: 0 };
     });
 
     renderer.setSetting("edgeReducer", (edge, edgeData) => {
@@ -223,7 +227,7 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
     });
 
     renderer.refresh();
-  }, [selectedNode]);
+  }, [selectedNode, complianceColors]);
 
   return (
     <div

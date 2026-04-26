@@ -16,9 +16,10 @@ interface Props {
   contractIds: string[];
   onClose: () => void;
   onSessionReady: (sessionId: string) => void;
+  onComplianceReady?: (vendorKey: string, color: string) => void;
 }
 
-export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, onSessionReady }: Props) {
+export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, onSessionReady, onComplianceReady }: Props) {
   const [findings, setFindings] = useState<ObligationFinding[]>([]);
   const [proposals, setProposals] = useState<RemediationProposal[]>([]);
   const [execSummary, setExecSummary] = useState("");
@@ -71,6 +72,16 @@ export default function VendorPanel({ nodeKey, nodeAttrs, contractIds, onClose, 
             onSessionReady(event.report.session_id);
             setDone(true);
             setStreaming(false);
+            // Derive compliance color from findings ratio and propagate to graph
+            if (onComplianceReady && nodeKey) {
+              const fs = event.report.findings;
+              const metCount = fs.filter((f) => f.verdict === "met").length;
+              const complianceRatio = fs.length > 0 ? metCount / fs.length : 0;
+              const color = complianceRatio >= 0.6 ? "#059669"   // emerald — mostly compliant
+                : complianceRatio >= 0.3 ? "#d97706"             // amber — mixed
+                : "#dc2626";                                       // red — mostly non-compliant
+              onComplianceReady(nodeKey, color);
+            }
           } else if (event.type === "error") {
             setError(event.message);
             setStreaming(false);
