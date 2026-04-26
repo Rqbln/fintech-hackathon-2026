@@ -69,31 +69,31 @@ export default function GraphCanvas({ data, selectedNode, onNodeClick }: Props) 
       y: 0,
     });
 
+    // Only Vendor nodes come from the API
     for (const { key, attributes } of data.nodes) {
       if (!graph.hasNode(key)) {
         const score = attributes.criticality_score ?? 0;
-        const sz = nodeSize(attributes.node_type, score);
+        const sz = nodeSize("Vendor", score);
         graph.addNode(key, {
           ...attributes,
-          color: nodeColor(attributes.node_type, score),
+          color: nodeColor("Vendor", score),
           size: sz,
           baseSize: sz,
-          zIndex: attributes.node_type === "Vendor" ? 2 : 1,
+          zIndex: 2,
           x: Math.random() * 4 - 2,
           y: Math.random() * 4 - 2,
         });
       }
     }
 
-    for (const { key, source, target, attributes } of data.edges) {
+    // DEPENDS_ON edges — directional arrows showing sub-vendor relationships
+    for (const { key, source, target } of data.edges) {
       if (graph.hasNode(source) && graph.hasNode(target) && !graph.hasEdge(key)) {
-        const isDepends = attributes.label === "DEPENDS_ON";
         graph.addEdgeWithKey(key, source, target, {
-          label: attributes.label,
-          // "arrow" type uses EdgeArrowProgram — shows direction
-          type: isDepends ? "arrow" : "line",
-          color: isDepends ? "#d97706dd" : "#64748baa",
-          size: isDepends ? 2.5 : 1.2,
+          type: "arrow",
+          color: "#d97706dd",
+          size: 2.5,
+          label: "",
         });
       }
     }

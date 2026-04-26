@@ -61,10 +61,9 @@ async def get_graph(driver: AsyncDriver, root_vendor: str | None = None, depth: 
         node_rows = await run_read(
             driver,
             """
-            MATCH (n)
-            WHERE n:Vendor OR n:Service OR n:BusinessFunction OR n:Contract OR n:DORAObligation
+            MATCH (n:Vendor)
             RETURN
-                labels(n)[0] AS label_type,
+                'Vendor' AS label_type,
                 n.id AS id,
                 n.name AS name,
                 coalesce(n.criticality_score, 0.0) AS criticality_score,
@@ -75,8 +74,7 @@ async def get_graph(driver: AsyncDriver, root_vendor: str | None = None, depth: 
         edge_rows = await run_read(
             driver,
             """
-            MATCH (a)-[r]->(b)
-            WHERE (a:Vendor OR a:Service OR a:Contract OR a:BusinessFunction)
+            MATCH (a:Vendor)-[r:DEPENDS_ON]->(b:Vendor)
             RETURN
                 id(r) AS eid,
                 a.id AS source,
